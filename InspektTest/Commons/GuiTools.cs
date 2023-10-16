@@ -2,6 +2,7 @@
  * Benutzer: Lulu
  * Datum: 21.10.2015
  * 04.02.2023   add SetCueText() from CommonTools.cs
+ * 16.10.2023   chg ComputeZoom() syntax and comments
  */
 
 /// <summary>
@@ -91,24 +92,18 @@ namespace Visutronik.Commons
             //Debug.WriteLine("ComputeZoom(): RatioC = {0}, RatioI = {1}", dRatioC.ToString(), dRatioI.ToString());
             //Debug.WriteLine("ComputeZoom(): ZoomH = {0},  ZoomV = {1}", dZoomH.ToString(), dZoomV.ToString());
 
-            if (dZoomH <= dZoomV)
-            {
-                //Debug.WriteLine("  using ZoomH");
-                dZoom = dZoomH;
-            }
-            else
-            {
-                //Debug.WriteLine("  using ZoomV");
-                dZoom = dZoomV;
-            }
+            // mit kleinstem Zoomfaktor weitermachen
+            dZoom = dZoomH <= dZoomV ? dZoomH : dZoomV;
 
             if (dRatioC <= dRatioI)
             {
+                // links und rechts freier Rand
                 ZeroX = (int)(((double)controlSize.Width - dZoom * imageSize.Width) / 2.0);
                 ZeroY = 0;
             }
             else
             {
+                // oben und unten freier Rand
                 ZeroX = 0;
                 ZeroY = (int)(((double)controlSize.Height - dZoom * imageSize.Height) / 2.0);
             }

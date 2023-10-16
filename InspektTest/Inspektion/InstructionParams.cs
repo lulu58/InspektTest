@@ -1,5 +1,5 @@
 ﻿/*
- * Projekt  : 
+ * Projekt  : Inspekt
  * Datei    : Inspektionsanweisung
  * 25.10.2018 initial
  * 06.01.2023
@@ -25,7 +25,7 @@ namespace Visutronik.Inspektion
     /// <summary>
     /// Description of Instruction.
     /// </summary>
-    public class Instruction
+    public class InstructionParams
     {
         const bool DIAG_PARAMS = false;
 
@@ -35,6 +35,7 @@ namespace Visutronik.Inspektion
         public int Number { get; set; } = 0;
         public string Name { get; set; } = "None";
         public string Description { get; set; } = string.Empty;
+        public bool IsSelected { get; set; } = false;
 
         // area
         public int CameraIndex { get; set; } = 0;
@@ -78,11 +79,12 @@ namespace Visutronik.Inspektion
         /// <summary>
         /// ctor setting default properties
         /// </summary>
-        public Instruction()
+        public InstructionParams()
         {
             Number = -1;
             Name = "No name";
             Description = "No description available";
+            IsSelected = false;
 
             CameraIndex = 0;
             ImageIndex = 0;
@@ -92,7 +94,7 @@ namespace Visutronik.Inspektion
             Operation = "";         // Load, Save, Filter, Checker, ...
             OperationParams = "";
 
-            Evaluation = "";        // "Compare", ...
+            Evaluation = "";        // "Compare", "", ...
             EvaluationParams = "";
 
             ResultSuccess = false;
@@ -155,9 +157,10 @@ namespace Visutronik.Inspektion
             //Debug.WriteLine("PointIsInside: " + ImageArea);
             if (result)
             {
-                // check if point is inside the instruction object's hull
+                // check if point is inside the instruction object's rectangular hull
                 if ((pt.X < rectHull.X) || (pt.X > rectHull.X + rectHull.Width)) result = false;
                 else if ((pt.Y < rectHull.Y) || (pt.Y > rectHull.Y + rectHull.Height)) result = false;
+
                 if (result && (ImageAreaIndex == (int) ImageAreaType.Circle))
                 {
                     // PointIsInside(): more checks for circles
@@ -280,6 +283,9 @@ namespace Visutronik.Inspektion
         #endregion
 
         #region --- real operation ---
+
+        // Todo real operation
+
         #endregion
 
         #region --- parameter converters ---

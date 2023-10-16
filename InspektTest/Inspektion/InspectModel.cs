@@ -22,21 +22,21 @@ namespace Visutronik.Inspektion
     /// <summary>
     /// Description of InspectModel.
     /// </summary>
-    public class InspectModel : IEnumerable<Instruction>
+    public class InspectModel : IEnumerable<InstructionParams>
     {
         #region ----- events ----------------------------------------------
 
         // Signalisierung der Checker mit Event:
-        public delegate void ShowCheckerRectEvent(RectangleF rect);
+        public delegate void ShowCheckerRectEvent(RectangleF rect, int colorindex);
         public event ShowCheckerRectEvent ShowCheckerRect;
 
-        public delegate void ShowCheckerCircleEvent(CircleF circle);
+        public delegate void ShowCheckerCircleEvent(CircleF circle, int colorindex);
         public event ShowCheckerCircleEvent ShowCheckerCircle;
 
-        public delegate void ShowCheckerLineEvent(LineF circle);
+        public delegate void ShowCheckerLineEvent(LineF circle, int colorindex);
         public event ShowCheckerLineEvent ShowCheckerLine;
 
-        public delegate void OnOperationReadyEvent(Instruction instruction, bool result);
+        public delegate void OnOperationReadyEvent(InstructionParams instruction, bool result);
         public event OnOperationReadyEvent OnOperationReady;
 
         public delegate void SetImageLoadedEvent(Bitmap img);
@@ -60,7 +60,7 @@ namespace Visutronik.Inspektion
         /// <summary>
         /// 
         /// </summary>
-        public List<Instruction> instructionList = new List<Instruction>();
+        public List<InstructionParams> instructionList = new List<InstructionParams>();
 
         /// <summary>
         /// 
@@ -80,7 +80,7 @@ namespace Visutronik.Inspektion
             return instructionList.Count > 0;
         }
 
-        private bool inspectionStop = false;
+        private bool InspectionStop { get; set; } = false;
 
         private List<Bitmap> imageList = new List<Bitmap>();
 
@@ -104,7 +104,7 @@ namespace Visutronik.Inspektion
         }
 
         // wichtig!
-        public IEnumerator<Instruction> GetEnumerator()
+        public IEnumerator<InstructionParams> GetEnumerator()
         {
             return instructionList.GetEnumerator();
         }
@@ -141,23 +141,23 @@ namespace Visutronik.Inspektion
         /// <returns>true if no operating errors occurs</returns>
         public bool Inspect()
         {
-            Debug.WriteLine("Model.Inspect()");
+            Debug.WriteLine("--- Model.Inspect() ---");
             bool result = true;
-            inspectionStop = false;
+            InspectionStop = false;
             LastError = "Inspektion ok";
 
             if (HasInstructionList())
             {
                 try
                 {
-                    foreach (var i in instructionList)
+                    foreach (var iparam in instructionList)
                     {
-                        result = Operate(i);
+                        result = Operate(iparam);
 
                         // Callback -> Resultate an GUI
-                        OnOperationReady?.Invoke(i, result);
+                        OnOperationReady?.Invoke(iparam, result);
 
-                        if (inspectionStop)
+                        if (InspectionStop)
                         {
                             LastError = "Inspektion gestoppt";
                             result = false;
@@ -190,7 +190,7 @@ namespace Visutronik.Inspektion
         public void StopInspect()
         {
             Debug.WriteLine("Model.StopInspect()");
-            inspectionStop = true;
+            InspectionStop = true;
         }
 
         /// <summary>
@@ -225,40 +225,54 @@ namespace Visutronik.Inspektion
             Debug.WriteLine("InspectModel.GetCheckers()");
 
             bool result = true;
-            inspectionStop = false;
+            InspectionStop = false;
             LastError = "GetCheckers ok";
 
-            if (HasInstructionList())
+            if (this.HasInstructionList())
             {
                 try
                 {
                     foreach (var i in instructionList)
                     {
-                        // Debug.WriteLine($" - {i.Name}: {i.Operation}");
+                        Debug.WriteLine($" - {i.Name}: {i.Operation}, selected={i.IsSelected}");
 
                         if (i.Operation == "Checker")
                         {
+                            int colorindex = i.IsSelected ? 1 : 0; // erweiterungsfähig auf mehr Eigenschaften...
+                            Debug.WriteLine($"  colorindex={colorindex}");
                             //Debug.WriteLine($"  {i.ImageArea}: {i.ImageAreaParams}");
-                            if (i.ImageAreaIndex == 1)
+                            if (i.ImageAreaIndex == (int)ImageAreaType.Rect)            // 1
                             {
-                                // Checker - Rect ermitteln und per Callback in MainForm.PictureBox anzeigen
+                                // CheckerRect ermitteln und per Callback in MainForm.PictureBox anzeigen
                                 RectangleF rect = InstructionHelper.GetRectangleFromString(i.ImageAreaParams);
                                 // callback!
-                                ShowCheckerRect?.Invoke(rect);
+                                ShowCheckerRect?.Invoke(rect, colorindex);
                                 continue;
                             }
 
-                            if (i.ImageAreaIndex == 2)
+                            if (i.ImageAreaIndex == (int)ImageAreaType.Circle)          // 2
                             {
                                 CircleF circle = InstructionHelper.GetCircleFromString(i.ImageAreaParams);
-                                ShowCheckerCircle?.Invoke(circle);
+                                ShowCheckerCircle?.Invoke(circle, colorindex);
                                 continue;
                             }
 
-                            if (i.ImageAreaIndex == 5)
+                            if (i.ImageAreaIndex == (int)ImageAreaType.Ring)            // 3
+                            {
+                                // TODO
+                                continue;
+                            }
+
+                            if (i.ImageAreaIndex == (int)ImageAreaType.CircleSegment)   // 4
+                            {
+                                // TODO
+                                continue;
+                            }
+
+                            if (i.ImageAreaIndex == (int)ImageAreaType.Line)            // 5
                             {
                                 LineF line = InstructionHelper.GetLineFromString(i.ImageAreaParams);
-                                ShowCheckerLine?.Invoke(line);
+                                ShowCheckerLine?.Invoke(line, colorindex);
                                 continue;
                             }
                         }
@@ -290,7 +304,7 @@ namespace Visutronik.Inspektion
         /// <param name="pt">Punkt im aktuellen Bild</param>
         /// <param name="fi">gefundene Instruktion oder null</param>
         /// <returns>true wenn Punkt zu Instruktion gehört</returns>
-        public bool FindObject(System.Drawing.Point pt, out Instruction fi)
+        public bool FindObject(System.Drawing.Point pt, out InstructionParams fi)
         {
             fi = null;
             try
@@ -319,6 +333,64 @@ namespace Visutronik.Inspektion
             return (fi != null);
         }
 
+
+        /// <summary>
+        /// Reset all IsSelected flags from checkers
+        /// </summary>
+        /// <returns></returns>
+        public bool UnselectAllObjects()
+        {
+            try
+            {
+                // try to find an inspection object in instructions
+                foreach (var i in instructionList)
+                {
+                    if (i.Operation == "Checker")
+                    {
+                        i.IsSelected = false;
+                        Debug.WriteLine($"unselect checker {i.Number}");
+                    }
+                }
+                Debug.WriteLine("UnselectAllObjects");
+            }
+            catch (Exception ex)
+            {
+                LastError = ex.Message;
+                OutMsg(LastError);
+                return false;
+            }
+            return true;
+        }
+
+
+        /// <summary>
+        /// set IsSelected flag to one checker
+        /// </summary>
+        /// <param name="idx"></param>
+        /// <returns></returns>
+        public bool SelectObject(int idx)
+        {
+            try
+            {
+                // try to find an inspection object in instructions
+                foreach (var i in instructionList)
+                {
+                    if (i.Operation == "Checker" && i.Number == idx)
+                    {
+                        Debug.WriteLine($"select checker {idx}");
+                        i.IsSelected = true;
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LastError = ex.Message;
+                OutMsg(LastError);
+            }
+            return true; 
+        }
+
         /// <summary>
         /// AddSimpleChecker not used ...
         /// </summary>
@@ -328,7 +400,7 @@ namespace Visutronik.Inspektion
         {
             Debug.WriteLine("InspectModel.AddChecker(rect)");
 
-            Instruction i = new Instruction();
+            InstructionParams i = new InstructionParams();
 
             i.Number = instructionList.Count;
             i.Name = "SimpleRectChecker";
@@ -355,7 +427,7 @@ namespace Visutronik.Inspektion
         /// </summary>
         /// <param name="instruction">single instruction</param>
         /// <returns>true if success</returns>
-        public bool AddInstruction(Instruction instruction)
+        public bool AddInstruction(InstructionParams instruction)
         {
             Debug.WriteLine($"InspectModel.AddInstruction({instruction.Name})");
             bool result = true;
@@ -399,7 +471,7 @@ namespace Visutronik.Inspektion
                 using (StreamReader file = File.OpenText(path))
                 {
                     JsonSerializer serializer = new JsonSerializer();
-                    instructionList = (List<Instruction>)serializer.Deserialize(file, typeof(List<Instruction>));
+                    instructionList = (List<InstructionParams>)serializer.Deserialize(file, typeof(List<InstructionParams>));
                 }
                 ModifiedFlag = false;
             }
@@ -492,7 +564,7 @@ namespace Visutronik.Inspektion
             {
                 instructionList.Clear();
 
-                Instruction inst1 = new Instruction();
+                InstructionParams inst1 = new InstructionParams();
                 inst1.Number = instructionList.Count;
                 inst1.Name = "LoadImage";
                 inst1.Description = "Load image from file";
@@ -501,7 +573,7 @@ namespace Visutronik.Inspektion
                 inst1.CameraIndex = 0;
                 instructionList.Add(inst1);
 
-                Instruction inst2 = new Instruction();
+                InstructionParams inst2 = new InstructionParams();
                 inst2.Number = instructionList.Count;
                 inst2.Name = "GlobalBinarization";
                 inst2.Description = "Global binarization using Otzu's algorithm";
@@ -510,7 +582,7 @@ namespace Visutronik.Inspektion
                 inst1.CameraIndex = 0;
                 instructionList.Add(inst2);
 
-                Instruction inst3 = new Instruction();
+                InstructionParams inst3 = new InstructionParams();
                 inst3.Number = instructionList.Count;
                 inst3.Name = "Checker 1";
                 inst3.Description = "Check if part is present";
@@ -523,7 +595,7 @@ namespace Visutronik.Inspektion
                 inst3.EvaluationParams = "Min=20";
                 instructionList.Add(inst3);
 
-                Instruction inst4 = new Instruction();
+                InstructionParams inst4 = new InstructionParams();
                 inst4.Number = instructionList.Count;
                 inst4.Name = "Checker 2";
                 inst4.Description = "Check if part is present";
@@ -536,10 +608,11 @@ namespace Visutronik.Inspektion
                 inst4.EvaluationParams = "";
                 instructionList.Add(inst4);
 
-                Instruction inst5 = new Instruction();
+                InstructionParams inst5 = new InstructionParams();
                 inst5.Number = instructionList.Count;
                 inst5.Name = "Checker 3";
                 inst5.Description = "Check if part is present";
+                inst5.IsSelected = false;
                 inst5.ImageIndex = 0;
                 inst5.ImageAreaIndex = (int)ImageAreaType.Circle;   // "Rect"
                 inst5.ImageAreaParams = "{660, 400, 150}";
@@ -557,7 +630,6 @@ namespace Visutronik.Inspektion
                         result = false;
                     }
                 }
-
                 ModifiedFlag = true;
             }
             catch (Exception ex)
@@ -587,28 +659,42 @@ namespace Visutronik.Inspektion
 
         #region --- single instruction operations ------------
 
-        private bool Operate(Instruction i)
+        /// <summary>
+        /// do the operation with instruction params
+        /// </summary>
+        /// <param name="iparam">instruction params</param>
+        /// <returns>true if success</returns>
+        /// <exception cref="Exception"></exception>
+        private bool Operate(InstructionParams iparam)
         {
-            bool result = (i != null);
-            LastError = "";
-
-            Debug.WriteLine("--- Operate: " + i.Name + " : " + i.Operation);
-
-            switch (i.Operation)
+            bool result = (iparam != null);
+            if (!result)
             {
+                LastError = "missing params";
+                return false;
+            }
+
+            Debug.WriteLine("--- Operate: " + iparam.Name + " : " + iparam.Operation);
+            LastError = "";
+            switch (iparam.Operation)
+            {
+                //todo set camera params
+                //todo add snap image from camera
+
                 case "ImageLoad":
-                    result = LoadImageFromParams(i.OperationParams);// @"d:\Temp\JUS\Kamerabilder\3a.bmp"
+                    result = LoadImageFromParams(iparam.OperationParams);// @"d:\Temp\JUS\Kamerabilder\3a.bmp"
                     break;
                 case "ImageFilter":
-                    Debug.WriteLine("Todo ImageFilter");
+                    Debug.WriteLine("Todo global ImageFilter");
+                    result = OperateFilter(iparam.OperationParams);
                     break;
                 case "Checker":
-                    Debug.WriteLine("Todo Checker");
-                    result = OperateChecker(ref i);
+                    Debug.WriteLine("OperateChecker");
+                    result = OperateChecker(ref iparam);
                     break;
-                // TODO add weitere Operations
+                // TODO add more operations
                 default:
-                    throw new Exception($"Operation: {i.Operation} not supported");
+                    throw new Exception($"Operation: {iparam.Operation} not supported");
             }
             //Debug.WriteLine($" operation result = {result}, LastError = {LastError}");
             return result;
@@ -660,7 +746,7 @@ namespace Visutronik.Inspektion
 
 
         /// <summary>
-        /// 
+        /// Load image from file to dstimage
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
@@ -682,13 +768,24 @@ namespace Visutronik.Inspektion
 
         #endregion
 
+        public bool OperateFilter(string opParams)
+        {
+            // TODO OperateFilter(...)
+            string[] pms = opParams.Split(';');
+            foreach (string s1 in pms)
+            {
+                var s2 = s1.Trim(); // remove whitespace
+            }
+            return true;
+        }
+
 
         /// <summary>
         /// Checker-Operation ausführen - aus Liste oder einzeln
         /// </summary>
         /// <param name="i"></param>
         /// <returns></returns>
-        public bool OperateChecker(ref Instruction i)
+        public bool OperateChecker(ref InstructionParams i)
         {
             bool result = true;
             try

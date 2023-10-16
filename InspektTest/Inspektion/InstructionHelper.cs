@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using Visutronik.Imaging;
-using static Visutronik.Imaging.Checker;
+//using static Visutronik.Imaging.Checker;
 
 namespace Visutronik.Inspektion
 {
@@ -46,7 +46,6 @@ namespace Visutronik.Inspektion
         }
 
         #endregion
-
 
         #region --- parameter converters ---
 

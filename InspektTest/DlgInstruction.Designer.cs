@@ -133,7 +133,7 @@
             this.cbxCamIndex.Name = "cbxCamIndex";
             this.cbxCamIndex.Size = new System.Drawing.Size(104, 21);
             this.cbxCamIndex.TabIndex = 4;
-            this.cbxCamIndex.SelectedIndexChanged += new System.EventHandler(this.cbxCamIndex_SelectedIndexChanged);
+            this.cbxCamIndex.SelectedIndexChanged += new System.EventHandler(this.OnCbxCamIndex_SelectedIndexChanged);
             // 
             // lblImageParam3
             // 
@@ -204,7 +204,7 @@
             this.buttonTest.TabIndex = 5;
             this.buttonTest.Text = "Test";
             this.buttonTest.UseVisualStyleBackColor = true;
-            this.buttonTest.Click += new System.EventHandler(this.buttonTest_Click);
+            this.buttonTest.Click += new System.EventHandler(this.OnButtonTest_Click);
             // 
             // chkAuswertungAktiv
             // 
@@ -319,7 +319,7 @@
             this.cbxOperator.Name = "cbxOperator";
             this.cbxOperator.Size = new System.Drawing.Size(104, 21);
             this.cbxOperator.TabIndex = 16;
-            this.cbxOperator.SelectedIndexChanged += new System.EventHandler(this.cbxOperator_SelectedIndexChanged);
+            this.cbxOperator.SelectedIndexChanged += new System.EventHandler(this.OnCbxOperator_SelectedIndexChanged);
             // 
             // lblOpParams
             // 

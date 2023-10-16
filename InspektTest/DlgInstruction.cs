@@ -1,4 +1,12 @@
-﻿using System;
+﻿/*
+ * Projekt  : Inspekt
+ * Datei    : DlgInstruction - Dialog-Klasse zur Erzeugung und Generierung von BV-Anweisungen
+ */
+
+// 16.10.2023   add TODOs to find out what to do ;-)
+// 
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -10,22 +18,29 @@ using Visutronik.Inspektion;
 using System.Windows.Forms;
 using System.Diagnostics;
 using Visutronik.Commons;
-using static Visutronik.Imaging.Checker;
+//using static Visutronik.Imaging.Checker;
 
 namespace Visutronik
 {
     public partial class DlgInstruction : Form
     {
-        public Instruction GetInstruction() { return _instruction; }
+        public InstructionParams MyInstruction
+        {
+            get { return _instruction; }
+            set { _instruction = value; }
+        }
+
+        public InstructionParams GetInstruction() { return _instruction; }
 
         private Rectangle _rect;
-        private readonly Instruction _instruction;
+
+        private InstructionParams _instruction;
 
         public DlgInstruction(Rectangle rect, int cam = 0)
         {
             InitializeComponent();
 
-            _instruction = new Instruction();
+            _instruction = new InstructionParams();
             _rect = rect;
             _instruction.Operation = "Checker";
             _instruction.OperatorIdx = (int)OperatorType.Checker;
@@ -38,7 +53,7 @@ namespace Visutronik
             SetValuesToControls();
         }
 
-        public DlgInstruction(Instruction inst)
+        public DlgInstruction(InstructionParams inst)
         {
             InitializeComponent();
             _instruction = inst;
@@ -113,9 +128,9 @@ namespace Visutronik
             Close();
         }
 
-        private void cbxOperator_SelectedIndexChanged(object sender, EventArgs e)
+        private void OnCbxOperator_SelectedIndexChanged(object sender, EventArgs e)
         {
-
+            // TODO OnCbxOperator_SelectedIndexChanged
         }
 
 
@@ -123,13 +138,13 @@ namespace Visutronik
         {
             if (chkAuswertungAktiv.CheckState == CheckState.Indeterminate)
             {
-
+                // TODO OnCheckAuswertungAktiv_CheckedChanged
             }
         }
 
-        private void cbxCamIndex_SelectedIndexChanged(object sender, EventArgs e)
+        private void OnCbxCamIndex_SelectedIndexChanged(object sender, EventArgs e)
         {
-
+            // TODO OnCbxCamIndex_SelectedIndexChanged
         }
 
 
@@ -170,9 +185,9 @@ namespace Visutronik
             Debug.WriteLine("GroupBoxImage_Enter");
         }
 
-        private void buttonTest_Click(object sender, EventArgs e)
+        private void OnButtonTest_Click(object sender, EventArgs e)
         {
-
+            // TODO  OnButtonTest_Click
         }
 
     }

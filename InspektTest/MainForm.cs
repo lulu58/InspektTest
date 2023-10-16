@@ -10,6 +10,7 @@
 // 27.01.2023   1.0.0.7 Settings.Save() -> C:\ProgramData\Visutronik GmbH\InspektTest\ProgSettings.xml
 // 31.01.2023   1.0.0.8 chg DlgInstruction, add InstructionEnums.cs
 // 03.02.2023   1.0.0.9 viel geändert!!!
+// 16.10.2023   1.0.1.0 GIT-Version, chg mouse operations
 
 //TODO checker property dialog -> DlgInstruction, change checker size & position
 
@@ -34,14 +35,14 @@ namespace Visutronik.InspektTest
     /// </summary>
     public partial class MainForm : Form
     {
-        #region --- const and vars ---
+        #region ===== const and vars ====================================================================
 
         const bool DEBUG_GUI_INIT = false;    // 
-        const bool DEBUG_OVL_DRAW = false;
+        const bool DEBUG_OVL_DRAW = true;
         const bool DEBUG_PICTBOX1 = true;
 
         const string PROG_NAME = "InspektTest";
-        const string PROG_VERSION = "1.0.0.9";
+        const string PROG_VERSION = "1.0.1.0";
         const string PROG_VENDOR = "Visutronik GmbH";
 
         // class instances
@@ -56,17 +57,18 @@ namespace Visutronik.InspektTest
         System.Drawing.Size imgSize = new System.Drawing.Size(0, 0);
         readonly Overlay ovl = new Overlay();
         readonly Overlay ovl2 = new Overlay();   // for drawing in SetupMode
-
+        private bool imgLoaded = false;
         private double dPictZoom = 1.0;             // PictureBox-Zoomfaktor, abhängig von Bild- und PictureBox-Größe
         private System.Drawing.Point ptMousePos = new System.Drawing.Point(0, 0);   // aktuelle Mausposition bei Click
         private System.Drawing.Point ptZero = new System.Drawing.Point(0, 0);       // Nullpunkt des Bildes in PictureBox
+
 
         // TODO 3 Modi: Inspect, ModifyChecker, AddChecker
         private int ProgMode = 0;
         private bool SetupMode = false;
         private bool ModifyMode = false;
 
-        private Instruction currentInstruction = null;
+        private InstructionParams currentInstruction = null;
 
         private delegate void SetStringCallback(string str);
         private delegate void SetImageCallback(Bitmap img);
@@ -78,24 +80,27 @@ namespace Visutronik.InspektTest
             {2, "Setup" }
         };
 
+        private Color[] checkercolor = { Color.Yellow, Color.Pink, Color.Green };
+            
         #endregion
 
-        #region === form and form ctrl handlers ========================================
+        #region ===== form and form ctrl handlers =======================================================
 
         #region --- mainform load & close ----------------------------------
+
         public MainForm()
         {
             InitializeComponent();
             this.Text = PROG_NAME + " V" + PROG_VERSION;
 
-            model.ImageLoaded += Model_ImageLoaded;
+            model.ImageLoaded += OnModelImageLoaded;
             model.ShowCheckerRect += OverlayDrawCheckerRect;
             model.ShowCheckerCircle += OverlayDrawCheckerCircle;
             model.OnOperationReady += OperationReady;
 
        }
 
-        private void OperationReady(Instruction instruction, bool result)
+        private void OperationReady(InstructionParams instruction, bool result)
         {
             Debug.WriteLine("OperationReady: " + result);
         }
@@ -156,13 +161,13 @@ namespace Visutronik.InspektTest
         }
 
         // callback method
-        private void Model_ImageLoaded(Bitmap img)
+        private void OnModelImageLoaded(Bitmap img)
         {
             ovl.SetOverlay(img);
             ovl2.SetOverlay(img);
             this.imgSource = img;
             this.imgSize = img.Size;    // wichtig für PictureBox1 <---> imgSource
-
+            this.imgLoaded = true;
             ComputeZoomAndZeroPoint(pictureBox1.ClientSize, imgSource.Size);
 
             Debug.WriteLine("Model_ImageLoaded");
@@ -310,7 +315,7 @@ namespace Visutronik.InspektTest
         /// <param name="e"></param>
         private void BtnTest_Click(object sender, EventArgs e)
         {
-             DoTheTest();
+            DoTheTest();
 
             //ShowImage();    // after DoTheTest
 
@@ -319,36 +324,40 @@ namespace Visutronik.InspektTest
             //DiagBox(model.LastError);
         }
 
+        #endregion
 
-        private void OverlayDrawCheckerRect(RectangleF rect)
+        #region --- overlay drawing methods --------------------------------
+
+        private void OverlayDrawCheckerRect(RectangleF rect, int colorindex)
         {
-            Debug.WriteLineIf(DEBUG_OVL_DRAW, $"OverlayDrawCheckerRect: {rect}");
-            ovl?.DrawRectangleF(rect, Color.Yellow);
+            Debug.WriteLineIf(DEBUG_OVL_DRAW, $"OverlayDrawCheckerRect({rect}, {colorindex})");
+            System.Drawing.Color color = checkercolor[colorindex];
+            ovl?.DrawRectangleF(rect, color);
             PointF ptAnfasser = new PointF(rect.X, rect.Y);
-            ovl?.DrawCircleMarker(ptAnfasser, Color.Yellow);
+            ovl?.DrawCircleMarker(ptAnfasser, color);
             ptAnfasser.X += rect.Width;
             ptAnfasser.Y += rect.Height;
-            ovl?.DrawCircleMarker(ptAnfasser, Color.Yellow);
+            ovl?.DrawCircleMarker(ptAnfasser, color);
         }
 
-        private void OverlayDrawCheckerCircle(CircleF circle)
+        private void OverlayDrawCheckerCircle(CircleF circle, int colorindex)
         {
             Debug.WriteLineIf(DEBUG_OVL_DRAW, $"OverlayDrawCheckerCircle: {circle.center}, {circle.radius}");
+            System.Drawing.Color color = checkercolor[colorindex];
 
-            ovl?.DrawCircle(circle.center, circle.radius, Color.Yellow);
+            ovl?.DrawCircle(circle.center, circle.radius, color);
 
             PointF ptAnfasser = circle.center;
-            ovl?.DrawCircleMarker(ptAnfasser, Color.Yellow);
+            ovl?.DrawCircleMarker(ptAnfasser, color);
 
             ptAnfasser.X += circle.radius;
-            ovl?.DrawCircleMarker(ptAnfasser, Color.Yellow);
+            ovl?.DrawCircleMarker(ptAnfasser, color);
         }
-
         #endregion
 
-        #endregion
+        #endregion === form handlers ===
 
-        #region === picturebox methods =========================================================
+        #region ===== picturebox methods ================================================================
 
         /// <summary>
         /// PictureBox1 SizeChanged event handler
@@ -388,6 +397,7 @@ namespace Visutronik.InspektTest
 
             if (SetupMode)
             {
+                // zusätzlich in ovl2 erzeugte neue Objekte anzeigen
                 imageToShow = ovl2.GetOverlay(imageToShow);
             }
 
@@ -408,6 +418,8 @@ namespace Visutronik.InspektTest
         /// <param name="e"></param>
         private void PictureBox1_MouseDown(object sender, MouseEventArgs e)
         {
+            if (!imgLoaded) return;
+
             PictureBox picbox = (PictureBox)sender;
             System.Drawing.Point posMouse = e.Location;
 
@@ -424,15 +436,26 @@ namespace Visutronik.InspektTest
 
             mouseMoved = false;
 
+            if (SetupMode || ModifyMode)
+            {
+                // TODO explore current checker
+            }
+
             if (SetupMode)
             {
                 IsCreatingChecker = true;
                 ovl2.ClearOverlay();
             }
+            if (ModifyMode)
+            {
+
+            }
         }
 
         private void PictureBox1_MouseUp(object sender, MouseEventArgs e)
         {
+            if (!imgLoaded) return;
+
             PictureBox picbox = (PictureBox)sender;
             System.Drawing.Point posMouse = e.Location;
 
@@ -447,7 +470,7 @@ namespace Visutronik.InspektTest
             }
             Debug.WriteLineIf(DEBUG_PICTBOX1, $"{posMouse} -> ptMouseUp = {ptMouseUp} ");
 
-            if (ProgMode == 2 && mouseMoved)
+            if (SetupMode && mouseMoved)    // Setup mode
             {
                 IsCreatingChecker = false;
                 Rectangle r = InstructionHelper.GetNormalizedRectangleFromPoints(ptMouseDown, ptMouseUp);
@@ -472,7 +495,7 @@ namespace Visutronik.InspektTest
                 ovl2.ClearOverlay();
                 ShowImage();  // in setup mode when mouse is moved
             }
-            else if (ProgMode == 1)
+            else if (ModifyMode)
             {
                 // Bearbeitungsmodus
                 // TODO prüfen, ob Maus in vorhandenem Checker ist...
@@ -491,6 +514,8 @@ namespace Visutronik.InspektTest
 
         private void PictureBox1_MouseMove(object sender, MouseEventArgs e)
         {
+            if (!imgLoaded) return;
+
             PictureBox picbox = (PictureBox)sender;
             System.Drawing.Point posMouse = e.Location;
 
@@ -516,12 +541,14 @@ namespace Visutronik.InspektTest
         }
 
         /// <summary>
-        /// 
+        /// Mausclick mit rechter Maustaste im Bild soll Checker markieren...
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void PictureBox1_MouseClick(object sender, MouseEventArgs e)
         {
+            if (!imgLoaded) return;
+
             PictureBox picbox = (PictureBox)sender;
             System.Drawing.Point posMouse = e.Location;
             System.Drawing.Point ptImage;
@@ -537,21 +564,28 @@ namespace Visutronik.InspektTest
             }
             Debug.WriteLine($"Clicked ptImage = {ptImage}");
 
-            //if (!SetupMode)
-            //{
-            //    model.FindObject(ptImage, out currentInstruction);
-            //    if (currentInstruction != null)
-            //    {
-            //        Debug.WriteLine("Mouse is in " + currentInstruction.Name);
-            //    }
-            //}
+            if (!SetupMode)
+            {
+                if (e.Button == MouseButtons.Right)
+                {
+                    model.FindObject(ptImage, out currentInstruction);
+                    if (currentInstruction != null)
+                    {
+                        Debug.WriteLine("Mouseclick is in " + currentInstruction.Name);
+                        DiagBox($"{currentInstruction.Number}: {currentInstruction.Name}");
+
+                        model.UnselectAllObjects();
+                        model.SelectObject(currentInstruction.Number);
+                    }
+                }
+            }
         }
 
         #endregion --- picturebox1 mouse work ---
 
         #endregion
 
-        #region === Helper methods ====================================================================
+        #region ===== Helper methods ====================================================================
 
         private void LoadImage()
         {
@@ -639,6 +673,7 @@ namespace Visutronik.InspektTest
                     {
                         ovl.ClearOverlay();
                         ovl2.ClearOverlay();
+                        
                         //model.GetCheckers();  // Checkers in Overlay anzeigen:
                         ShowImage();          // Bild mit Overlay anzeigen (load instructions)
                     }
@@ -718,19 +753,19 @@ namespace Visutronik.InspektTest
             DiagBox(strErgebnis);
             DiagBox("- - - - - - - - - -");
 
-            Rectangle testchecker = new Rectangle(350, 200, 200, 150);
-            ovl.DrawRectangle(new Rectangle(20, 20, 200, 130), Color.LimeGreen);
-            ShowImage();
+            //Rectangle testchecker = new Rectangle(350, 200, 200, 150);
+            //ovl.DrawRectangle(new Rectangle(20, 20, 200, 130), Color.LimeGreen);
+            //ShowImage();
 
-            DlgInstruction dlg = new DlgInstruction(testchecker);
-            if (dlg.ShowDialog() == DialogResult.OK)
-            {
-                if (!model.AddInstruction(dlg.GetInstruction()))
-                {
-                    MsgBox("AddInstruction: Fehler!");
-                }
-                ovl.ClearOverlay();
-            }
+            //DlgInstruction dlg = new DlgInstruction(testchecker);
+            //if (dlg.ShowDialog() == DialogResult.OK)
+            //{
+            //    if (!model.AddInstruction(dlg.GetInstruction()))
+            //    {
+            //        MsgBox("AddInstruction: Fehler!");
+            //    }
+            //    ovl.ClearOverlay();
+            //}
 
 
             if (ovl != null)
@@ -775,7 +810,7 @@ namespace Visutronik.InspektTest
 
         #endregion
 
-        #region ===== GUI helper methods =====
+        #region ===== GUI helper methods ================================================================
 
         /// <summary>
         /// Buttons usw. je nach Programmstatus freigeben
@@ -1015,6 +1050,8 @@ namespace Visutronik.InspektTest
             }
         }
 
+        #region --- Bild / Picturebox Koordinaten ---
+
         /// <summary>
         /// Wandelt picturebox-Koordinaten in Bildkoordinaten um
         /// Achtung: funktioniert nur bei Zoom-Modus, wenn Bild die PictureBox ausfüllt.
@@ -1101,6 +1138,8 @@ namespace Visutronik.InspektTest
             }
             return result;
         }
+
+        #endregion
 
         #region --- Fullscreen ---------------------------------------------------------------------
 
