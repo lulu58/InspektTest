@@ -8,6 +8,7 @@ using System.ComponentModel;			// wichtig für Benutzung PropertyGrid!
 using System.IO;
 using System.Diagnostics;
 using Visutronik.Commons;               // XmlAppSettings
+using System.Xml;
 
 
 namespace Visutronik.InspektTest
@@ -46,6 +47,9 @@ namespace Visutronik.InspektTest
 
         [Description("Letztes Bild"), Category("Dateien")]
         public string LastImage { get; set; } = "";
+
+        [Description("Letzte Liste"), Category("Dateien")]
+        public string LastInstruction { get; set; } = "";
 
 
         // --- Window size and location ---
@@ -136,6 +140,7 @@ namespace Visutronik.InspektTest
                 InstructionFolder = xmlset.Read("Prüfanweisungs-Verzeichnis", InstructionFolder);
                 ImageFolder     = xmlset.Read("Bild-Verzeichnis", ImageFolder);
                 LastImage       = xmlset.Read("LetztesBild", LastImage);
+                LastInstruction = xmlset.Read("LetztesListe", LastInstruction);
 
                 // Window               
                 Fullscreen = xmlset.Read("Fullscreen", this.Fullscreen);
@@ -183,6 +188,7 @@ namespace Visutronik.InspektTest
                 xmlset.Write("Prüfanweisungs-Verzeichnis", this.InstructionFolder);
                 xmlset.Write("Bild-Verzeichnis", this.ImageFolder);
                 xmlset.Write("LetztesBild", LastImage);
+                xmlset.Write("LetztesListe", LastInstruction);
 
                 //Window
                 xmlset.Write("Fullscreen", this.Fullscreen);
@@ -224,7 +230,8 @@ namespace Visutronik.InspektTest
 			Debug.WriteLine("Logdatei-Verzeichnis :      " + LogFolder);
             Debug.WriteLine("Prüfanweisungs-Verzeichnis: " + InstructionFolder);
             Debug.WriteLine("Bild-Verzeichnis:           " + ImageFolder);
-            Debug.WriteLine("LetztesBild:                " + LastImage);
+            Debug.WriteLine("Letztes Bild:               " + LastImage);
+            Debug.WriteLine("Letzte Liste:               " + LastInstruction);
 
             Debug.WriteLine("Fullscreen : " + this.Fullscreen);
 			Debug.WriteLine("WindowSizeX: " + this.WindowSizeX);

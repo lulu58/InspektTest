@@ -34,10 +34,12 @@
             this.bildladenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.instruktionslisteLadenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.instruktionslisteSpeichernToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.einstellungenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.vollbildToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripMenuItem();
             this.cbxMode = new System.Windows.Forms.ToolStripComboBox();
             this.instruktionenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.listeAnzeigenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -90,6 +92,7 @@
             this.bildladenToolStripMenuItem,
             this.instruktionslisteLadenToolStripMenuItem,
             this.instruktionslisteSpeichernToolStripMenuItem,
+            this.einstellungenToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.dateiToolStripMenuItem.Name = "dateiToolStripMenuItem";
             this.dateiToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D)));
@@ -117,6 +120,13 @@
             this.instruktionslisteSpeichernToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
             this.instruktionslisteSpeichernToolStripMenuItem.Text = "Instruktionsliste speichern";
             this.instruktionslisteSpeichernToolStripMenuItem.Click += new System.EventHandler(this.OnMenuListeSpeichern_Click);
+            // 
+            // einstellungenToolStripMenuItem
+            // 
+            this.einstellungenToolStripMenuItem.Name = "einstellungenToolStripMenuItem";
+            this.einstellungenToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.einstellungenToolStripMenuItem.Text = "Einstellungen";
+            this.einstellungenToolStripMenuItem.Click += new System.EventHandler(this.OnEinstellungen_Click);
             // 
             // exitToolStripMenuItem
             // 
@@ -146,10 +156,18 @@
             // 
             // toolStripMenuItem2
             // 
+            this.toolStripMenuItem2.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem5});
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
             this.toolStripMenuItem2.Size = new System.Drawing.Size(44, 23);
             this.toolStripMenuItem2.Text = "&Hilfe";
             this.toolStripMenuItem2.Click += new System.EventHandler(this.OnHelp_Click);
+            // 
+            // toolStripMenuItem5
+            // 
+            this.toolStripMenuItem5.Name = "toolStripMenuItem5";
+            this.toolStripMenuItem5.Size = new System.Drawing.Size(74, 22);
+            this.toolStripMenuItem5.Text = "&";
             // 
             // cbxMode
             // 
@@ -206,7 +224,7 @@
             // 
             this.tableLayoutPanel1.ColumnCount = 3;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 249F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 280F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
             this.tableLayoutPanel1.Controls.Add(this.tabControl1, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.listBox1, 1, 0);
@@ -229,7 +247,7 @@
             this.tabControl1.Location = new System.Drawing.Point(3, 3);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(489, 362);
+            this.tabControl1.Size = new System.Drawing.Size(458, 362);
             this.tabControl1.TabIndex = 0;
             // 
             // tabPage1
@@ -238,7 +256,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(481, 336);
+            this.tabPage1.Size = new System.Drawing.Size(450, 336);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "tabPage1";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -249,7 +267,7 @@
             this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pictureBox1.Location = new System.Drawing.Point(3, 3);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(475, 330);
+            this.pictureBox1.Size = new System.Drawing.Size(444, 330);
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
             this.pictureBox1.SizeChanged += new System.EventHandler(this.PictureBox1_SizeChanged);
@@ -264,7 +282,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(444, 336);
+            this.tabPage2.Size = new System.Drawing.Size(481, 336);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -274,7 +292,7 @@
             this.pictureBox2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pictureBox2.Location = new System.Drawing.Point(3, 3);
             this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(438, 330);
+            this.pictureBox2.Size = new System.Drawing.Size(475, 330);
             this.pictureBox2.TabIndex = 0;
             this.pictureBox2.TabStop = false;
             // 
@@ -282,19 +300,19 @@
             // 
             this.listBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.listBox1.FormattingEnabled = true;
-            this.listBox1.Location = new System.Drawing.Point(498, 3);
+            this.listBox1.Location = new System.Drawing.Point(467, 3);
             this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(243, 362);
+            this.listBox1.Size = new System.Drawing.Size(274, 362);
             this.listBox1.TabIndex = 1;
             // 
             // labelResult
             // 
             this.labelResult.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelResult.Location = new System.Drawing.Point(498, 371);
+            this.labelResult.Location = new System.Drawing.Point(467, 371);
             this.labelResult.Margin = new System.Windows.Forms.Padding(3);
             this.labelResult.Name = "labelResult";
             this.labelResult.Padding = new System.Windows.Forms.Padding(2);
-            this.labelResult.Size = new System.Drawing.Size(243, 27);
+            this.labelResult.Size = new System.Drawing.Size(274, 27);
             this.labelResult.TabIndex = 2;
             this.labelResult.Text = "Ergebnis";
             // 
@@ -424,6 +442,8 @@
         private System.Windows.Forms.ToolStripMenuItem listeAnzeigenToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem instruktionslisteLadenToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem instruktionslisteSpeichernToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem5;
+        private System.Windows.Forms.ToolStripMenuItem einstellungenToolStripMenuItem;
     }
 }
 

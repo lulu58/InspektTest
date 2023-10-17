@@ -11,7 +11,7 @@
 // 31.01.2023   1.0.0.8 chg DlgInstruction, add InstructionEnums.cs
 // 03.02.2023   1.0.0.9 viel geändert!!!
 // 16.10.2023   1.0.1.0 GIT-Version, chg mouse operations
-
+// 
 //TODO checker property dialog -> DlgInstruction, change checker size & position
 
 using System;
@@ -178,11 +178,6 @@ namespace Visutronik.InspektTest
 
         #region --- menu handlers ------------------------------------------
 
-        private void OnMenuExit_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
-
         /// <summary>
         /// Lade Bild aus Datei
         /// </summary>
@@ -208,6 +203,18 @@ namespace Visutronik.InspektTest
         private void OnMenuListeSpeichern_Click(object sender, EventArgs e)
         {
             ListeSpeichern();
+        }
+
+
+        private void OnEinstellungen_Click(object sender, EventArgs e)
+        {
+            Einstellungen();
+        }
+
+ 
+        private void OnMenuExit_Click(object sender, EventArgs e)
+        {
+            Close();
         }
 
 
@@ -669,12 +676,14 @@ namespace Visutronik.InspektTest
                     DiagBox("Anweisungen geladen:");
                     DiagBox(model.InstructionFile);
 
+                    settings.LastInstruction = model.InstructionFile;
+
                     if (imgSource != null)
                     {
                         ovl.ClearOverlay();
                         ovl2.ClearOverlay();
                         
-                        //model.GetCheckers();  // Checkers in Overlay anzeigen:
+                        model.GetCheckers();  // Checkers in Overlay anzeigen:
                         ShowImage();          // Bild mit Overlay anzeigen (load instructions)
                     }
                     else DiagBox("Warnung: noch kein Kamerabild!");
@@ -716,6 +725,17 @@ namespace Visutronik.InspektTest
             }
         }
 
+        /// <summary>
+        /// Programmeinstellungen anpassen
+        /// </summary>
+        private void Einstellungen()
+        {
+            //throw new NotImplementedException();
+            DiagBox("Einstellungen nicht implementiert");
+            //TODO Einstellungen
+        }
+
+
         private void DoTheTest()
         {
 
@@ -728,8 +748,8 @@ namespace Visutronik.InspektTest
 
             DiagBox("2. Anweisungsliste laden");
             //model.CreateNewInstructions();
-            model.CreateTestInstructions();
-
+            //model.CreateTestInstructions();
+            model.LoadInstructionsFromFile(settings.LastInstruction);
 
 
             // test some drawing to overlay bitmap:
@@ -1174,5 +1194,6 @@ namespace Visutronik.InspektTest
         #endregion
 
         #endregion GUI helper methods
+
     }
 }
