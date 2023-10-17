@@ -22,11 +22,11 @@ namespace Visutronik.Inspektion
     {
         #region --- string arrays ---
 
-        public static string[] Operators  = new string[] { "Bild laden", "Filter", "Checker", "Math.Op" };
+        public static string[] Operators  = new string[] { "Kamerabild", "Bild laden", "Filter", "Checker", "Math.Op" };
 
         public static string[] FilterTypes = new string[] { "Smooth", "Binarization", "Edges", "Invert" };
 
-        public static string[] CheckerTypes = new string[] { "Mean", "Size", "Length" };
+        public static string[] CheckerTypes = new string[] { "Mean", "Size", "Radius", "Length" };
 
         public static string[] CameraNames = new string[] { "---", "Links", "Mitte", "Rechts" };
 

@@ -18,6 +18,7 @@ using Visutronik.Inspektion;
 using System.Windows.Forms;
 using System.Diagnostics;
 using Visutronik.Commons;
+using static Visutronik.Imaging.GeometricTools;
 //using static Visutronik.Imaging.Checker;
 
 namespace Visutronik
@@ -37,22 +38,30 @@ namespace Visutronik
         private InstructionParams _instruction;
 
         /// <summary>
-        /// ctor
+        /// ctor ohne Params
+        /// </summary>
+        public DlgInstruction()
+        { }
+
+        /// <summary>
+        /// ctor mit geometr. Parametern
+        /// wird zum Setup genutzt (Neue Checker anlegen aus GUI)
         /// </summary>
         /// <param name="rect"></param>
-        /// <param name="cam"></param>
-        public DlgInstruction(Rectangle rect, int cam = 0)
+        /// <param name="camidx"></param>
+        /// <param name="number"></param>
+        public DlgInstruction(Rectangle rect, int camidx = 0, int number = 0)
         {
             InitializeComponent();
 
             _instruction = new InstructionParams();
             _rect = rect;
-            _instruction.Number = 0;
+            _instruction.Number = number;
             _instruction.Operation = "Checker";
             _instruction.OperatorIdx = (int)OperatorType.Checker;
             _instruction.FilterIdx = -1;
             _instruction.CheckerIdx = -1;
-            _instruction.CameraIndex = cam;
+            _instruction.CameraIndex = camidx;
             _instruction.ImageAreaIndex = (int)ImageAreaType.Rect;
             _instruction.ImageAreaParams = rect.ToString();
 
@@ -60,11 +69,15 @@ namespace Visutronik
             SetValuesToControls();
         }
 
-        public DlgInstruction(InstructionParams inst)
+        /// <summary>
+        /// ctor mit InstructionParams
+        /// wird zur Modifikation benutzt
+        /// </summary>
+        public DlgInstruction(InstructionParams inst, Rectangle neurect)
         {
             InitializeComponent();
             _instruction = inst;
-
+            _instruction.ImageAreaParams = neurect.ToString();
             InitControls();
             SetValuesToControls();
         }
@@ -77,7 +90,7 @@ namespace Visutronik
             // None = -1, LoadImage, Filter, Checker,
 
             cbxOperator.Items.AddRange(InstructionHelper.Operators);
-            //new string[] { "Bild laden", "Filter", "Checker" });
+            //new string[] { "Kamera", "Bild laden", "Filter", "Checker" });
             cbxFilterTyp.Items.AddRange(InstructionHelper.FilterTypes);
             cbxCheckerTyp.Items.AddRange(InstructionHelper.CheckerTypes);
 
@@ -112,21 +125,27 @@ namespace Visutronik
         {
             bool result = true;
 
+            if (!_instruction.CheckInstructionParameters())
+            {
+                lblInstrParams.Text = "Ungültige Werte!";
+                result = false;
+            }
+            else lblInstrParams.Text = "";
+
+
             if (!_instruction.CheckOperationParameters())
             {
                 lblOpParams.Text = "Ungültige Werte!";
                 result = false;
             }
-            else
-                lblOpParams.Text = "";
+            else lblOpParams.Text = "";
 
             if (!_instruction.CheckImageAreaParameters())
             {
                 lblImageParams.Text = "Ungültige Werte!";
                 result = false;
             }
-            else
-                lblImageParams.Text = "";
+            else lblImageParams.Text = "";
 
             // TODO Prüfen weiterer Eingaben
 

@@ -1,9 +1,14 @@
 ﻿///
-///
+/// enums gehören keiner Klasse an.
 ///
 
 namespace Visutronik.Inspektion
 {
+    public enum CameraType
+    {
+        None = -1, Left = 0, Middle = 1, Right = 2
+    }
+
     /// <summary>
     /// 
     /// </summary>
@@ -20,6 +25,10 @@ namespace Visutronik.Inspektion
     public enum FilterType
     {
         None = -1,
+        Smooth = 0,
+        Binary,
+        Edge,
+        Invert
     };
 
 

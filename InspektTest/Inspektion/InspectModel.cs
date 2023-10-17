@@ -24,6 +24,8 @@ namespace Visutronik.Inspektion
     /// </summary>
     public class InspectModel : IEnumerable<InstructionParams>
     {
+        public bool ExtendedDiagnostics { get; set; } = false;
+
         #region ----- events ----------------------------------------------
 
         // Signalisierung der Checker mit Event:
@@ -130,7 +132,7 @@ namespace Visutronik.Inspektion
         /// </summary>
         public void CreateNewInstructions()
         {
-            Debug.WriteLine("Model.CreateNewInstructions()");
+            Debug.WriteLineIf(ExtendedDiagnostics, "Model.CreateNewInstructions()");
             instructionList.Clear();
             ModifiedFlag = true;
         }
@@ -190,7 +192,7 @@ namespace Visutronik.Inspektion
         /// </summary>
         public void StopInspect()
         {
-            Debug.WriteLine("Model.StopInspect()");
+            Debug.WriteLineIf(ExtendedDiagnostics, "Model.StopInspect()");
             InspectionStop = true;
         }
 
@@ -200,7 +202,7 @@ namespace Visutronik.Inspektion
         /// <returns></returns>
         public bool CloseInspect()
         {
-            Debug.WriteLine("Model.CloseInspect()");
+            Debug.WriteLineIf(ExtendedDiagnostics, "Model.CloseInspect()");
             bool result = true;
             try
             {
@@ -221,9 +223,9 @@ namespace Visutronik.Inspektion
         /// and invoke events to draw to overlay...
         /// </summary>
         /// <returns>true if success</returns>
-        public bool GetCheckers()
+        public bool DrawCheckersToOverlay()
         {
-            Debug.WriteLine("InspectModel.GetCheckers()");
+            Debug.WriteLineIf(ExtendedDiagnostics, "InspectModel.GetCheckers()");
 
             bool result = true;
             InspectionStop = false;
@@ -235,12 +237,12 @@ namespace Visutronik.Inspektion
                 {
                     foreach (var i in instructionList)
                     {
-                        Debug.WriteLine($" - {i.Name}: {i.Operation}, selected={i.IsSelected}");
+                        Debug.WriteLineIf(ExtendedDiagnostics, $" - {i.Name}: {i.Operation}, selected={i.IsSelected}");
 
                         if (i.Operation == "Checker")
                         {
                             int colorindex = i.IsSelected ? 1 : 0; // erweiterungsfähig auf mehr Eigenschaften...
-                            Debug.WriteLine($"  colorindex={colorindex}");
+                            Debug.WriteLineIf(ExtendedDiagnostics, $"  colorindex={colorindex}");
                             //Debug.WriteLine($"  {i.ImageArea}: {i.ImageAreaParams}");
                             if (i.ImageAreaIndex == (int)ImageAreaType.Rect)            // 1
                             {
@@ -260,13 +262,13 @@ namespace Visutronik.Inspektion
 
                             if (i.ImageAreaIndex == (int)ImageAreaType.Ring)            // 3
                             {
-                                // TODO GetCheckers - Ring
+                                // TODO DrawCheckersToOverlay - Ring
                                 continue;
                             }
 
                             if (i.ImageAreaIndex == (int)ImageAreaType.CircleSegment)   // 4
                             {
-                                // TODO GetCheckers - CircleSegment
+                                // TODO DrawCheckersToOverlay - CircleSegment
                                 continue;
                             }
 
@@ -317,10 +319,10 @@ namespace Visutronik.Inspektion
                     {
                         string areaName = InstructionHelper.AreaNames[i.ImageAreaIndex];
 
-                        Debug.WriteLine($" Is mouse point in Checker {i.Name} - {areaName}?");
+                        Debug.WriteLineIf(ExtendedDiagnostics, $" Is mouse point in Checker {i.Name} - {areaName}?");
                         if (i.PointIsInside(pt))
                         {
-                            Debug.WriteLine("  YES!");
+                            Debug.WriteLine($"point is in checker {i.Name}");
                             fi = i; break;
                         }
                     }
@@ -349,10 +351,10 @@ namespace Visutronik.Inspektion
                     if (i.Operation == "Checker")
                     {
                         i.IsSelected = false;
-                        Debug.WriteLine($"unselect checker {i.Number}");
+                        Debug.WriteLineIf(ExtendedDiagnostics, $"unselect checker {i.Number}");
                     }
                 }
-                Debug.WriteLine("UnselectAllObjects");
+                Debug.WriteLineIf(ExtendedDiagnostics, "UnselectAllObjects");
             }
             catch (Exception ex)
             {
@@ -389,7 +391,7 @@ namespace Visutronik.Inspektion
                 LastError = ex.Message;
                 OutMsg(LastError);
             }
-            return true; 
+            return true;
         }
 
         /// <summary>
@@ -510,12 +512,8 @@ namespace Visutronik.Inspektion
         public bool SaveInstructionsToFile()
         {
             Debug.WriteLine("Model.SaveInstructions()");
-            bool result = true;
-            if (ModifiedFlag)
-            {
-                result = SaveInstructionsToFile(InstructionFile);
-            }
-            return result;
+
+            return SaveInstructionsToFile(InstructionFile, ModifiedFlag);
         }
 
         /// <summary>
@@ -523,32 +521,37 @@ namespace Visutronik.Inspektion
         /// </summary>
         /// <param name="path">path to file</param>
         /// <returns>true if success</returns>
-        public bool SaveInstructionsToFile(string path)
+        public bool SaveInstructionsToFile(string path, bool modifyFlag = true)
         {
-            Debug.WriteLine($"InspectModel.SaveToFile({path})");
-            bool result = instructionList.Count > 0;
-            if (result)
+            Debug.WriteLine($"InspectModel.SaveToFile({path}, {modifyFlag})");
+
+            bool result = true;
+            if (modifyFlag)
             {
-                try
+                result = instructionList.Count > 0;
+                if (result)
                 {
-                    JsonSerializer serializer = new JsonSerializer();
-                    serializer.NullValueHandling = NullValueHandling.Ignore;
-                    using (StreamWriter sw = new StreamWriter(path))
-                    using (JsonWriter writer = new JsonTextWriter(sw))
+                    try
                     {
-                        writer.Formatting = Formatting.Indented;
-                        serializer.Serialize(writer, instructionList);
+                        JsonSerializer serializer = new JsonSerializer();
+                        serializer.NullValueHandling = NullValueHandling.Ignore;
+                        using (StreamWriter sw = new StreamWriter(path))
+                        using (JsonWriter writer = new JsonTextWriter(sw))
+                        {
+                            writer.Formatting = Formatting.Indented;
+                            serializer.Serialize(writer, instructionList);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LastError = ex.Message;
+                        result = false;
                     }
                 }
-                catch (Exception ex)
+                else
                 {
-                    LastError = ex.Message;
-                    result = false;
+                    LastError = "Anweisungsliste ist leer!";
                 }
-            }
-            else
-            {
-                LastError = "Anweisungsliste ist leer!";
             }
             return result;
         }
@@ -819,7 +822,7 @@ namespace Visutronik.Inspektion
             }
 
             // TODO echte Filteroperation
-            imgDest = (Bitmap) imageList[srcimgNr].Clone();
+            imgDest = (Bitmap)imageList[srcimgNr].Clone();
             imageList[dstimgNr] = imgDest;
 
             // send image to main form

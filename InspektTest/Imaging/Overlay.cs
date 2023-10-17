@@ -25,7 +25,7 @@
   	checkerList.Draw(ovl.ovlbitmap);			// external drawing to overlay bitmap
 
 	// show the composed image
-	Bitmap imgSrcWithOvl = ovl.GetOverlay(imgSource);
+	Bitmap imgSrcWithOvl = ovl.GetImageWithOverlay(imgSource);
 	picturebox1.Image = imgSrcWithOvl; 
  */
  
@@ -170,7 +170,7 @@ namespace Visutronik.Imaging
 		/// </summary>
 		/// <param name="destBmp"></param>
 		/// <returns></returns>
-		public System.Drawing.Bitmap GetOverlay(System.Drawing.Bitmap destBmp)
+		public System.Drawing.Bitmap GetImageWithOverlay(System.Drawing.Bitmap destBmp)
 		{
 			//return OverlayBitmap(destBmp, ovlbitmap, new Point(0,0));
 			return OverlayBitmap(destBmp, ovlbitmap);	// Lulu-Verson

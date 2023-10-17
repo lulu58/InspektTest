@@ -445,18 +445,18 @@ namespace Visutronik.InspektTest
             }
 
             Bitmap imageToShow = imgSource;
-            if (model.GetCheckers())
+            if (model.DrawCheckersToOverlay())
             {
                 // show the composed image
-                imageToShow = ovl.GetOverlay(imageToShow);
-                //Bitmap imgSrcWithOvl = ovl.GetOverlay(imgSource);
+                imageToShow = ovl.GetImageWithOverlay(imageToShow);
+                //Bitmap imgSrcWithOvl = ovl.GetImageWithOverlay(imgSource);
                 //pictureBox1.Image = imgSrcWithOvl;
             }
 
             if (SetupMode)
             {
                 // zusätzlich in ovl2 erzeugte neue Objekte anzeigen
-                imageToShow = ovl2.GetOverlay(imageToShow);
+                imageToShow = ovl2.GetImageWithOverlay(imageToShow);
             }
 
             pictureBox1.Image = imageToShow;
@@ -537,14 +537,17 @@ namespace Visutronik.InspektTest
                 IsCreatingChecker = false;
                 Rectangle r = InstructionHelper.GetNormalizedRectangleFromPoints(ptMouseDown, ptMouseUp);
 
-                ovl2.ClearOverlay();
-                ovl2.DrawRectangle(r, Color.Green);
-                ShowImage();    // in setup mode
+                //ovl2.ClearOverlay();
+                //ovl2.DrawRectangle(r, Color.Green);
+                //ShowImage();    // in setup mode
 
                 // NewChecker-Dialog - Setzen der weiteren Parameter
                 if (JaNeinAntwortBox("Neuen Checker anlegen"))
                 {
-                    DlgInstruction dlg = new DlgInstruction(r);
+                    int count = model.instructionList.Count;
+                    // TODO camidx abhängig von tabIndex
+                    int camidx = 0;
+                    DlgInstruction dlg = new DlgInstruction(r, camidx, count + 1);
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
                         if (!model.AddInstruction(dlg.GetInstruction()))
@@ -565,7 +568,14 @@ namespace Visutronik.InspektTest
                 // TODO prüfen, ob Maus in vorhandenem Checker ist...
                 if (model.FindObject(ptMouseDown, out currentInstruction))
                 {
+                    Rectangle r = InstructionHelper.GetNormalizedRectangleFromPoints(ptMouseDown, ptMouseUp);
+
                     DiagBox(currentInstruction.Name);
+                    DlgInstruction dlg = new DlgInstruction(currentInstruction, r);
+                    if (dlg.ShowDialog() == DialogResult.OK)
+                    {
+
+                    }
                 }
             }
             else
@@ -738,7 +748,7 @@ namespace Visutronik.InspektTest
                         ovl.ClearOverlay();
                         ovl2.ClearOverlay();
 
-                        model.GetCheckers();  // Checkers in Overlay anzeigen:
+                        model.DrawCheckersToOverlay();  // Checkers in Overlay anzeigen:
                         ShowImage();          // Bild mit Overlay anzeigen (load instructions)
                     }
                     else DiagBox("Warnung: noch kein Kamerabild!");
@@ -771,6 +781,7 @@ namespace Visutronik.InspektTest
                 {
                     DiagBox("Anweisungen gespeichert:");
                     DiagBox(model.InstructionFile);
+                    settings.LastInstruction = model.InstructionFile;
                 }
                 else
                 {
@@ -1306,6 +1317,7 @@ namespace Visutronik.InspektTest
                 msg = "CheckVerzeichnisse(): " + ex.Message;
                 result = false;
             }
+            if (!result) { Debug.WriteLine(msg); }
             return result;
         }
 

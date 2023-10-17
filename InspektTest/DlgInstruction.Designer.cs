@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.groupBoxImage = new System.Windows.Forms.GroupBox();
+            this.lblImageParams = new System.Windows.Forms.Label();
             this.tbxImageParam3 = new System.Windows.Forms.TextBox();
             this.tbxImageParam2 = new System.Windows.Forms.TextBox();
             this.tbxImageParam1 = new System.Windows.Forms.TextBox();
@@ -40,6 +41,13 @@
             this.lblImageParam1 = new System.Windows.Forms.Label();
             this.cbxImageRegion = new System.Windows.Forms.ComboBox();
             this.groupBoxOperation = new System.Windows.Forms.GroupBox();
+            this.lblCheckerType = new System.Windows.Forms.Label();
+            this.lblFilterTyp = new System.Windows.Forms.Label();
+            this.cbxCheckerTyp = new System.Windows.Forms.ComboBox();
+            this.cbxFilterTyp = new System.Windows.Forms.ComboBox();
+            this.lblOpParams = new System.Windows.Forms.Label();
+            this.cbxOperator = new System.Windows.Forms.ComboBox();
+            this.lblOpType = new System.Windows.Forms.Label();
             this.groupBoxEvaluation = new System.Windows.Forms.GroupBox();
             this.buttonTest = new System.Windows.Forms.Button();
             this.chkAuswertungAktiv = new System.Windows.Forms.CheckBox();
@@ -52,14 +60,7 @@
             this.lblNumber = new System.Windows.Forms.Label();
             this.lblDescription = new System.Windows.Forms.Label();
             this.lblInstructionName = new System.Windows.Forms.Label();
-            this.lblOpType = new System.Windows.Forms.Label();
-            this.cbxOperator = new System.Windows.Forms.ComboBox();
-            this.lblOpParams = new System.Windows.Forms.Label();
-            this.lblImageParams = new System.Windows.Forms.Label();
-            this.cbxFilterTyp = new System.Windows.Forms.ComboBox();
-            this.cbxCheckerTyp = new System.Windows.Forms.ComboBox();
-            this.lblFilterTyp = new System.Windows.Forms.Label();
-            this.lblCheckerType = new System.Windows.Forms.Label();
+            this.lblInstrParams = new System.Windows.Forms.Label();
             this.groupBoxImage.SuspendLayout();
             this.groupBoxOperation.SuspendLayout();
             this.groupBoxEvaluation.SuspendLayout();
@@ -87,25 +88,33 @@
             this.groupBoxImage.Text = "Bildregion";
             this.groupBoxImage.Enter += new System.EventHandler(this.GroupBoxImage_Enter);
             // 
+            // lblImageParams
+            // 
+            this.lblImageParams.BackColor = System.Drawing.SystemColors.ControlDark;
+            this.lblImageParams.Location = new System.Drawing.Point(6, 157);
+            this.lblImageParams.Name = "lblImageParams";
+            this.lblImageParams.Size = new System.Drawing.Size(309, 23);
+            this.lblImageParams.TabIndex = 18;
+            // 
             // tbxImageParam3
             // 
             this.tbxImageParam3.Location = new System.Drawing.Point(100, 131);
             this.tbxImageParam3.Name = "tbxImageParam3";
-            this.tbxImageParam3.Size = new System.Drawing.Size(203, 20);
+            this.tbxImageParam3.Size = new System.Drawing.Size(185, 20);
             this.tbxImageParam3.TabIndex = 15;
             // 
             // tbxImageParam2
             // 
             this.tbxImageParam2.Location = new System.Drawing.Point(100, 105);
             this.tbxImageParam2.Name = "tbxImageParam2";
-            this.tbxImageParam2.Size = new System.Drawing.Size(203, 20);
+            this.tbxImageParam2.Size = new System.Drawing.Size(185, 20);
             this.tbxImageParam2.TabIndex = 14;
             // 
             // tbxImageParam1
             // 
             this.tbxImageParam1.Location = new System.Drawing.Point(100, 79);
             this.tbxImageParam1.Name = "tbxImageParam1";
-            this.tbxImageParam1.Size = new System.Drawing.Size(203, 20);
+            this.tbxImageParam1.Size = new System.Drawing.Size(185, 20);
             this.tbxImageParam1.TabIndex = 13;
             // 
             // lblImageRegion
@@ -126,11 +135,11 @@
             this.lblCamera.TabIndex = 5;
             this.lblCamera.Text = "Kamera:";
             // 
-            // cbxCamIndex
+            // cbxCamName
             // 
             this.cbxCamName.FormattingEnabled = true;
             this.cbxCamName.Location = new System.Drawing.Point(100, 19);
-            this.cbxCamName.Name = "cbxCamIndex";
+            this.cbxCamName.Name = "cbxCamName";
             this.cbxCamName.Size = new System.Drawing.Size(104, 21);
             this.cbxCamName.TabIndex = 4;
             this.cbxCamName.SelectedIndexChanged += new System.EventHandler(this.OnCbxCamIndex_SelectedIndexChanged);
@@ -139,7 +148,7 @@
             // 
             this.lblImageParam3.Location = new System.Drawing.Point(6, 134);
             this.lblImageParam3.Name = "lblImageParam3";
-            this.lblImageParam3.Size = new System.Drawing.Size(104, 23);
+            this.lblImageParam3.Size = new System.Drawing.Size(86, 23);
             this.lblImageParam3.TabIndex = 3;
             this.lblImageParam3.Text = "lblImageParam3";
             // 
@@ -147,7 +156,7 @@
             // 
             this.lblImageParam2.Location = new System.Drawing.Point(6, 108);
             this.lblImageParam2.Name = "lblImageParam2";
-            this.lblImageParam2.Size = new System.Drawing.Size(104, 23);
+            this.lblImageParam2.Size = new System.Drawing.Size(86, 23);
             this.lblImageParam2.TabIndex = 2;
             this.lblImageParam2.Text = "lblImageParam2";
             // 
@@ -155,9 +164,9 @@
             // 
             this.lblImageParam1.Location = new System.Drawing.Point(6, 82);
             this.lblImageParam1.Name = "lblImageParam1";
-            this.lblImageParam1.Size = new System.Drawing.Size(104, 23);
+            this.lblImageParam1.Size = new System.Drawing.Size(86, 23);
             this.lblImageParam1.TabIndex = 1;
-            this.lblImageParam1.Text = "lblImageParam1";
+            this.lblImageParam1.Text = "Region-Param.:";
             // 
             // cbxImageRegion
             // 
@@ -183,6 +192,66 @@
             this.groupBoxOperation.TabIndex = 1;
             this.groupBoxOperation.TabStop = false;
             this.groupBoxOperation.Text = "Operation";
+            // 
+            // lblCheckerType
+            // 
+            this.lblCheckerType.AutoSize = true;
+            this.lblCheckerType.Location = new System.Drawing.Point(11, 78);
+            this.lblCheckerType.Name = "lblCheckerType";
+            this.lblCheckerType.Size = new System.Drawing.Size(64, 13);
+            this.lblCheckerType.TabIndex = 21;
+            this.lblCheckerType.Text = "Checkertyp:";
+            // 
+            // lblFilterTyp
+            // 
+            this.lblFilterTyp.AutoSize = true;
+            this.lblFilterTyp.Location = new System.Drawing.Point(9, 51);
+            this.lblFilterTyp.Name = "lblFilterTyp";
+            this.lblFilterTyp.Size = new System.Drawing.Size(46, 13);
+            this.lblFilterTyp.TabIndex = 20;
+            this.lblFilterTyp.Text = "Filtertyp:";
+            // 
+            // cbxCheckerTyp
+            // 
+            this.cbxCheckerTyp.FormattingEnabled = true;
+            this.cbxCheckerTyp.Location = new System.Drawing.Point(87, 75);
+            this.cbxCheckerTyp.Name = "cbxCheckerTyp";
+            this.cbxCheckerTyp.Size = new System.Drawing.Size(104, 21);
+            this.cbxCheckerTyp.TabIndex = 19;
+            // 
+            // cbxFilterTyp
+            // 
+            this.cbxFilterTyp.FormattingEnabled = true;
+            this.cbxFilterTyp.Location = new System.Drawing.Point(87, 48);
+            this.cbxFilterTyp.Name = "cbxFilterTyp";
+            this.cbxFilterTyp.Size = new System.Drawing.Size(104, 21);
+            this.cbxFilterTyp.TabIndex = 18;
+            // 
+            // lblOpParams
+            // 
+            this.lblOpParams.BackColor = System.Drawing.SystemColors.ControlDark;
+            this.lblOpParams.Location = new System.Drawing.Point(6, 181);
+            this.lblOpParams.Name = "lblOpParams";
+            this.lblOpParams.Size = new System.Drawing.Size(309, 23);
+            this.lblOpParams.TabIndex = 17;
+            // 
+            // cbxOperator
+            // 
+            this.cbxOperator.FormattingEnabled = true;
+            this.cbxOperator.Location = new System.Drawing.Point(87, 21);
+            this.cbxOperator.Name = "cbxOperator";
+            this.cbxOperator.Size = new System.Drawing.Size(104, 21);
+            this.cbxOperator.TabIndex = 16;
+            this.cbxOperator.SelectedIndexChanged += new System.EventHandler(this.OnCbxOperator_SelectedIndexChanged);
+            // 
+            // lblOpType
+            // 
+            this.lblOpType.AutoSize = true;
+            this.lblOpType.Location = new System.Drawing.Point(6, 24);
+            this.lblOpType.Name = "lblOpType";
+            this.lblOpType.Size = new System.Drawing.Size(51, 13);
+            this.lblOpType.TabIndex = 16;
+            this.lblOpType.Text = "Operator:";
             // 
             // groupBoxEvaluation
             // 
@@ -241,6 +310,7 @@
             // 
             // groupBoxInstruction
             // 
+            this.groupBoxInstruction.Controls.Add(this.lblInstrParams);
             this.groupBoxInstruction.Controls.Add(this.tbxDescription);
             this.groupBoxInstruction.Controls.Add(this.tbxName);
             this.groupBoxInstruction.Controls.Add(this.tbxInstructionNumber);
@@ -303,73 +373,13 @@
             this.lblInstructionName.TabIndex = 7;
             this.lblInstructionName.Text = "Bezeichnung:";
             // 
-            // lblOpType
+            // lblInstrParams
             // 
-            this.lblOpType.AutoSize = true;
-            this.lblOpType.Location = new System.Drawing.Point(6, 24);
-            this.lblOpType.Name = "lblOpType";
-            this.lblOpType.Size = new System.Drawing.Size(51, 13);
-            this.lblOpType.TabIndex = 16;
-            this.lblOpType.Text = "Operator:";
-            // 
-            // cbxOperator
-            // 
-            this.cbxOperator.FormattingEnabled = true;
-            this.cbxOperator.Location = new System.Drawing.Point(87, 21);
-            this.cbxOperator.Name = "cbxOperator";
-            this.cbxOperator.Size = new System.Drawing.Size(104, 21);
-            this.cbxOperator.TabIndex = 16;
-            this.cbxOperator.SelectedIndexChanged += new System.EventHandler(this.OnCbxOperator_SelectedIndexChanged);
-            // 
-            // lblOpParams
-            // 
-            this.lblOpParams.BackColor = System.Drawing.SystemColors.ControlDark;
-            this.lblOpParams.Location = new System.Drawing.Point(6, 181);
-            this.lblOpParams.Name = "lblOpParams";
-            this.lblOpParams.Size = new System.Drawing.Size(309, 23);
-            this.lblOpParams.TabIndex = 17;
-            // 
-            // lblImageParams
-            // 
-            this.lblImageParams.BackColor = System.Drawing.SystemColors.ControlDark;
-            this.lblImageParams.Location = new System.Drawing.Point(6, 157);
-            this.lblImageParams.Name = "lblImageParams";
-            this.lblImageParams.Size = new System.Drawing.Size(309, 23);
-            this.lblImageParams.TabIndex = 18;
-            // 
-            // cbxFilterTyp
-            // 
-            this.cbxFilterTyp.FormattingEnabled = true;
-            this.cbxFilterTyp.Location = new System.Drawing.Point(87, 48);
-            this.cbxFilterTyp.Name = "cbxFilterTyp";
-            this.cbxFilterTyp.Size = new System.Drawing.Size(104, 21);
-            this.cbxFilterTyp.TabIndex = 18;
-            // 
-            // cbxCheckerTyp
-            // 
-            this.cbxCheckerTyp.FormattingEnabled = true;
-            this.cbxCheckerTyp.Location = new System.Drawing.Point(87, 75);
-            this.cbxCheckerTyp.Name = "cbxCheckerTyp";
-            this.cbxCheckerTyp.Size = new System.Drawing.Size(104, 21);
-            this.cbxCheckerTyp.TabIndex = 19;
-            // 
-            // lblFilterTyp
-            // 
-            this.lblFilterTyp.AutoSize = true;
-            this.lblFilterTyp.Location = new System.Drawing.Point(9, 51);
-            this.lblFilterTyp.Name = "lblFilterTyp";
-            this.lblFilterTyp.Size = new System.Drawing.Size(46, 13);
-            this.lblFilterTyp.TabIndex = 20;
-            this.lblFilterTyp.Text = "Filtertyp:";
-            // 
-            // lblCheckerType
-            // 
-            this.lblCheckerType.AutoSize = true;
-            this.lblCheckerType.Location = new System.Drawing.Point(11, 78);
-            this.lblCheckerType.Name = "lblCheckerType";
-            this.lblCheckerType.Size = new System.Drawing.Size(64, 13);
-            this.lblCheckerType.TabIndex = 21;
-            this.lblCheckerType.Text = "Checkertyp:";
+            this.lblInstrParams.BackColor = System.Drawing.SystemColors.ControlDark;
+            this.lblInstrParams.Location = new System.Drawing.Point(6, 157);
+            this.lblInstrParams.Name = "lblInstrParams";
+            this.lblInstrParams.Size = new System.Drawing.Size(309, 23);
+            this.lblInstrParams.TabIndex = 22;
             // 
             // DlgInstruction
             // 
@@ -432,5 +442,6 @@
         private System.Windows.Forms.Label lblFilterTyp;
         private System.Windows.Forms.ComboBox cbxCheckerTyp;
         private System.Windows.Forms.ComboBox cbxFilterTyp;
+        private System.Windows.Forms.Label lblInstrParams;
     }
 }

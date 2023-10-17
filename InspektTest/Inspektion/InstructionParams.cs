@@ -235,6 +235,18 @@ namespace Visutronik.Inspektion
         /// 
         /// </summary>
         /// <returns></returns>
+        public bool CheckInstructionParameters()
+        {
+            Debug.WriteLineIf(DIAG_PARAMS, "Instruction.CheckInstructionParameters(): ");
+            bool result = true;
+            result &= this.Name.Length > 1;
+            return result;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public bool CheckOperationParameters()
         {
             Debug.WriteLineIf(DIAG_PARAMS, "Instruction.CheckOperationParameters(): ");
