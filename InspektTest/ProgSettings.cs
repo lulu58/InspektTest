@@ -8,7 +8,6 @@ using System.ComponentModel;			// wichtig für Benutzung PropertyGrid!
 using System.IO;
 using System.Diagnostics;
 using Visutronik.Commons;               // XmlAppSettings
-using System.Xml;
 
 
 namespace Visutronik.InspektTest
@@ -21,16 +20,23 @@ namespace Visutronik.InspektTest
 		#region ----- constants ------
 
 		private const string XML_SETTINGSFILE = "ProgSettings.xml";
-		//private const string SQL_CONNECTFILE  = "DatabaseParameter.dat";
+        //private const string SQL_CONNECTFILE  = "DatabaseParameter.dat";
 
-		#endregion
+        #endregion
 
-		#region ----- properties -----
+        #region ----- properties -----
 
-		/// <summary>
-		/// Verzeichnis für Logdateien (Programm, DB, Profildateien)
-		/// </summary>
-		[Description("Logdateiverzeichnis"), Category("Dateien")]
+        /// <summary>
+        /// Verzeichnis für Projektdateien (Programm, Log, ...)
+        /// </summary>
+        [Description("Projektverzeichnis"), Category("Dateien")]
+        public string ProjFolder { get; set; } = @"D:\Temp\Inspect";
+
+
+        /// <summary>
+        /// Verzeichnis für Logdateien (Programm, DB, Profildateien)
+        /// </summary>
+        [Description("Logdateiverzeichnis"), Category("Dateien")]
 		public string LogFolder { get; set; } = @"D:\Temp\JUS\Log";
 
         /// <summary>
@@ -136,7 +142,8 @@ namespace Visutronik.InspektTest
 			try
 			{
 				xmlset = new XmlAppSettings(XmlSettingsFile, false);
-				LogFolder		= xmlset.Read("Log-Verzeichnis", LogFolder);
+                ProjFolder		= xmlset.Read("Projekt-Verzeichnis", ProjFolder);
+                LogFolder		= xmlset.Read("Log-Verzeichnis", LogFolder);
                 InstructionFolder = xmlset.Read("Prüfanweisungs-Verzeichnis", InstructionFolder);
                 ImageFolder     = xmlset.Read("Bild-Verzeichnis", ImageFolder);
                 LastImage       = xmlset.Read("LetztesBild", LastImage);
@@ -183,8 +190,9 @@ namespace Visutronik.InspektTest
 			{
 				xmlset = new XmlAppSettings(XmlSettingsFile, false);
 
-				// Dateipfade	
-				xmlset.Write("Log-Verzeichnis", this.LogFolder);
+                // Dateipfade	
+                xmlset.Write("Projekt-Verzeichnis", ProjFolder);
+                xmlset.Write("Log-Verzeichnis", this.LogFolder);
                 xmlset.Write("Prüfanweisungs-Verzeichnis", this.InstructionFolder);
                 xmlset.Write("Bild-Verzeichnis", this.ImageFolder);
                 xmlset.Write("LetztesBild", LastImage);
@@ -227,7 +235,8 @@ namespace Visutronik.InspektTest
         {
 			Debug.WriteLine("--- DEBUG Benutzereinstellungen ---");
 
-			Debug.WriteLine("Logdatei-Verzeichnis :      " + LogFolder);
+            Debug.WriteLine("Projekt-Verzeichnis:        " + ProjFolder);
+            Debug.WriteLine("Logdatei-Verzeichnis:       " + LogFolder);
             Debug.WriteLine("Prüfanweisungs-Verzeichnis: " + InstructionFolder);
             Debug.WriteLine("Bild-Verzeichnis:           " + ImageFolder);
             Debug.WriteLine("Letztes Bild:               " + LastImage);

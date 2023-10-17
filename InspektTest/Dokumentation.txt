@@ -1,0 +1,26 @@
+﻿Instruction
+
+ImageParameters:
+            CameraIndex = 0;
+            ImageIndex = 0;
+            ImageAreaIndex = 0;
+            ImageAreaParams = "";   // a x b, MP, r, P1, P2, ...
+
+
+OperationParameters: 
+
+Operation = "None" | "ImageSnap" | "ImageLoad" | "ImageFilter" | "Checker" | "MathOp"
+
+OperationParams = 
+FilterTypes     = "Smooth", "Binarization", "Edges", "Invert"
+CheckerTypes    = "Mean" | "Object" | "BW-Ratio"  ... 
+AreaNames       = "Vollbild", "Rechteck", "Kreis", "Kreisring", "Kreissegment", "Linie"
+
+Evaluation:
+            Evaluation = "";        // "Compare", , ...
+            EvaluationParams = "Size" | "";
+
+Result:
+            ResultSuccess = true | false
+            ResultValue = 0.0f;
+            ResultError = "";

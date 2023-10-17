@@ -34,7 +34,7 @@
             this.tbxImageParam1 = new System.Windows.Forms.TextBox();
             this.lblImageRegion = new System.Windows.Forms.Label();
             this.lblCamera = new System.Windows.Forms.Label();
-            this.cbxCamIndex = new System.Windows.Forms.ComboBox();
+            this.cbxCamName = new System.Windows.Forms.ComboBox();
             this.lblImageParam3 = new System.Windows.Forms.Label();
             this.lblImageParam2 = new System.Windows.Forms.Label();
             this.lblImageParam1 = new System.Windows.Forms.Label();
@@ -74,7 +74,7 @@
             this.groupBoxImage.Controls.Add(this.tbxImageParam1);
             this.groupBoxImage.Controls.Add(this.lblImageRegion);
             this.groupBoxImage.Controls.Add(this.lblCamera);
-            this.groupBoxImage.Controls.Add(this.cbxCamIndex);
+            this.groupBoxImage.Controls.Add(this.cbxCamName);
             this.groupBoxImage.Controls.Add(this.lblImageParam3);
             this.groupBoxImage.Controls.Add(this.lblImageParam2);
             this.groupBoxImage.Controls.Add(this.lblImageParam1);
@@ -128,12 +128,12 @@
             // 
             // cbxCamIndex
             // 
-            this.cbxCamIndex.FormattingEnabled = true;
-            this.cbxCamIndex.Location = new System.Drawing.Point(100, 19);
-            this.cbxCamIndex.Name = "cbxCamIndex";
-            this.cbxCamIndex.Size = new System.Drawing.Size(104, 21);
-            this.cbxCamIndex.TabIndex = 4;
-            this.cbxCamIndex.SelectedIndexChanged += new System.EventHandler(this.OnCbxCamIndex_SelectedIndexChanged);
+            this.cbxCamName.FormattingEnabled = true;
+            this.cbxCamName.Location = new System.Drawing.Point(100, 19);
+            this.cbxCamName.Name = "cbxCamIndex";
+            this.cbxCamName.Size = new System.Drawing.Size(104, 21);
+            this.cbxCamName.TabIndex = 4;
+            this.cbxCamName.SelectedIndexChanged += new System.EventHandler(this.OnCbxCamIndex_SelectedIndexChanged);
             // 
             // lblImageParam3
             // 
@@ -412,7 +412,7 @@
         private System.Windows.Forms.Label lblImageParam1;
         private System.Windows.Forms.Label lblImageRegion;
         private System.Windows.Forms.Label lblCamera;
-        private System.Windows.Forms.ComboBox cbxCamIndex;
+        private System.Windows.Forms.ComboBox cbxCamName;
         private System.Windows.Forms.GroupBox groupBoxInstruction;
         private System.Windows.Forms.TextBox tbxImageParam3;
         private System.Windows.Forms.TextBox tbxImageParam2;

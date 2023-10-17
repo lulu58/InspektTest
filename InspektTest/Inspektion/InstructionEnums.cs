@@ -10,7 +10,8 @@ namespace Visutronik.Inspektion
     public enum OperatorType
     {
         None = -1,
-        LoadImage,      // Bild von Kamera oder aus Datei oder Resource laden
+        SnapImage,      // Bild von Kamera holen
+        LoadImage,      // Bild aus Datei oder Resource laden
         Filter,         // globale Filteroperation (Smooth, Crop, Stretch, Binarization, HistogramEqualization, 
         Checker,        // Bildausschnitt auswerten Grauwerte, Kanten, Blobs, ...
         MathOp          // Mathematische Verknüpfung von Ergebnissen
@@ -25,6 +26,9 @@ namespace Visutronik.Inspektion
     public enum CheckerType
     {
         None = -1,
+        Mean,       // "Mean"
+        Object,     // "Object"
+        BWRatio     // "BW-Ratio"
     };
 
 

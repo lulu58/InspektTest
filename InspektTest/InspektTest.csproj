@@ -129,6 +129,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Dokumentation.txt" />
     <Content Include="Kamera.ico" />
   </ItemGroup>
   <ItemGroup>

@@ -36,18 +36,25 @@ namespace Visutronik
 
         private InstructionParams _instruction;
 
+        /// <summary>
+        /// ctor
+        /// </summary>
+        /// <param name="rect"></param>
+        /// <param name="cam"></param>
         public DlgInstruction(Rectangle rect, int cam = 0)
         {
             InitializeComponent();
 
             _instruction = new InstructionParams();
             _rect = rect;
+            _instruction.Number = 0;
             _instruction.Operation = "Checker";
             _instruction.OperatorIdx = (int)OperatorType.Checker;
             _instruction.FilterIdx = -1;
             _instruction.CheckerIdx = -1;
             _instruction.CameraIndex = cam;
             _instruction.ImageAreaIndex = (int)ImageAreaType.Rect;
+            _instruction.ImageAreaParams = rect.ToString();
 
             InitControls();
             SetValuesToControls();
@@ -74,7 +81,7 @@ namespace Visutronik
             cbxFilterTyp.Items.AddRange(InstructionHelper.FilterTypes);
             cbxCheckerTyp.Items.AddRange(InstructionHelper.CheckerTypes);
 
-            cbxCamIndex.Items.AddRange(InstructionHelper.CameraNames);
+            cbxCamName.Items.AddRange(InstructionHelper.CameraNames);
             cbxImageRegion.Items.AddRange(InstructionHelper.AreaNames);
 
             GuiTools.SetCueText(tbxDescription, "Geben Sie eine kurze Beschreibung ein.");
@@ -90,9 +97,10 @@ namespace Visutronik
             cbxFilterTyp.SelectedIndex = _instruction.FilterIdx;
             cbxCheckerTyp.SelectedIndex = _instruction.CheckerIdx;
 
-            cbxCamIndex.SelectedIndex = _instruction.CameraIndex;
+            cbxCamName.SelectedIndex = _instruction.CameraIndex;
             cbxImageRegion.SelectedIndex = _instruction.ImageAreaIndex;
 
+            tbxImageParam1.Text = _instruction.ImageAreaParams;
         }
 
         /// <summary>
@@ -102,19 +110,41 @@ namespace Visutronik
         /// <param name="e"></param>
         private void ButtonOk_Click(object sender, EventArgs e)
         {
-            // TODO Prüfen der Eingaben
-            _instruction.CameraIndex = cbxCamIndex.SelectedIndex - 1;
-            _instruction.ImageAreaIndex = cbxImageRegion.SelectedIndex;
-            _instruction.ImageAreaParams = _rect.ToString();
-            _instruction.Name = tbxName.Text != string.Empty ? tbxName.Text : "unbenannt";
-            _instruction.Description = tbxDescription.Text;
+            bool result = true;
 
-            // hier 
-            _instruction.Operation = "Checker";
-            _instruction.OperatorIdx = cbxOperator.SelectedIndex;
+            if (!_instruction.CheckOperationParameters())
+            {
+                lblOpParams.Text = "Ungültige Werte!";
+                result = false;
+            }
+            else
+                lblOpParams.Text = "";
 
-            DialogResult = DialogResult.OK;
-            Close();
+            if (!_instruction.CheckImageAreaParameters())
+            {
+                lblImageParams.Text = "Ungültige Werte!";
+                result = false;
+            }
+            else
+                lblImageParams.Text = "";
+
+            // TODO Prüfen weiterer Eingaben
+
+            if (result)
+            {
+                _instruction.CameraIndex = cbxCamName.SelectedIndex - 1;
+                _instruction.ImageAreaIndex = cbxImageRegion.SelectedIndex;
+                _instruction.ImageAreaParams = _rect.ToString();
+                _instruction.Name = tbxName.Text != string.Empty ? tbxName.Text : "unbenannt";
+                _instruction.Description = tbxDescription.Text;
+
+                // hier 
+                _instruction.Operation = "Checker";
+                _instruction.OperatorIdx = cbxOperator.SelectedIndex;
+
+                DialogResult = DialogResult.OK;
+                Close();
+            }
         }
 
         /// <summary>
@@ -130,7 +160,7 @@ namespace Visutronik
 
         private void OnCbxOperator_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // TODO OnCbxOperator_SelectedIndexChanged
+            // - TODO OnCbxOperator_SelectedIndexChanged
         }
 
 
@@ -138,13 +168,13 @@ namespace Visutronik
         {
             if (chkAuswertungAktiv.CheckState == CheckState.Indeterminate)
             {
-                // TODO OnCheckAuswertungAktiv_CheckedChanged
+                // - TODO OnCheckAuswertungAktiv_CheckedChanged
             }
         }
 
         private void OnCbxCamIndex_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // TODO OnCbxCamIndex_SelectedIndexChanged
+            // - TODO OnCbxCamIndex_SelectedIndexChanged
         }
 
 
@@ -187,7 +217,7 @@ namespace Visutronik
 
         private void OnButtonTest_Click(object sender, EventArgs e)
         {
-            // TODO  OnButtonTest_Click
+            // TODO  DlgInstructions.OnButtonTest_Click
         }
 
     }

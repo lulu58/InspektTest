@@ -39,8 +39,9 @@ namespace Visutronik.Inspektion
         public delegate void OnOperationReadyEvent(InstructionParams instruction, bool result);
         public event OnOperationReadyEvent OnOperationReady;
 
-        public delegate void SetImageLoadedEvent(Bitmap img);
-        public event SetImageLoadedEvent ImageLoaded;
+        public delegate void SetImageEvent(Bitmap img);
+        public event SetImageEvent ImageLoaded;
+        public event SetImageEvent ImageProcessed;
 
         public delegate void SetMessageOutEvent(string msg);
         public event SetMessageOutEvent SetMessageOut;
@@ -152,7 +153,7 @@ namespace Visutronik.Inspektion
                 {
                     foreach (var iparam in instructionList)
                     {
-                        result = Operate(iparam);
+                        result = OperateSingleInstruction(iparam);
 
                         // Callback -> Resultate an GUI
                         OnOperationReady?.Invoke(iparam, result);
@@ -259,13 +260,13 @@ namespace Visutronik.Inspektion
 
                             if (i.ImageAreaIndex == (int)ImageAreaType.Ring)            // 3
                             {
-                                // TODO
+                                // TODO GetCheckers - Ring
                                 continue;
                             }
 
                             if (i.ImageAreaIndex == (int)ImageAreaType.CircleSegment)   // 4
                             {
-                                // TODO
+                                // TODO GetCheckers - CircleSegment
                                 continue;
                             }
 
@@ -660,12 +661,12 @@ namespace Visutronik.Inspektion
         #region --- single instruction operations ------------
 
         /// <summary>
-        /// do the operation with instruction params
+        /// do a single operation from instruction params
         /// </summary>
         /// <param name="iparam">instruction params</param>
         /// <returns>true if success</returns>
         /// <exception cref="Exception"></exception>
-        private bool Operate(InstructionParams iparam)
+        private bool OperateSingleInstruction(InstructionParams iparam)
         {
             bool result = (iparam != null);
             if (!result)
@@ -678,20 +679,26 @@ namespace Visutronik.Inspektion
             LastError = "";
             switch (iparam.Operation)
             {
-                //todo set camera params
-                //todo add snap image from camera
-
+                case "ImageSnap":
+                    //todo set camera params
+                    //todo add snap image from camera
+                    result = SnapImageFromParams(iparam.OperationParams);
+                    break;
                 case "ImageLoad":
                     result = LoadImageFromParams(iparam.OperationParams);// @"d:\Temp\JUS\Kamerabilder\3a.bmp"
                     break;
                 case "ImageFilter":
-                    Debug.WriteLine("Todo global ImageFilter");
                     result = OperateFilter(iparam.OperationParams);
                     break;
                 case "Checker":
                     Debug.WriteLine("OperateChecker");
                     result = OperateChecker(ref iparam);
                     break;
+                case "MathOp":
+                    Debug.WriteLine("MathOp");
+                    result = MathOperation(iparam.OperationParams);
+                    break;
+
                 // TODO add more operations
                 default:
                     throw new Exception($"Operation: {iparam.Operation} not supported");
@@ -746,9 +753,30 @@ namespace Visutronik.Inspektion
 
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="opParams"></param>
+        /// <returns></returns>
+        public bool SnapImageFromParams(string opParams)
+        {
+            Debug.WriteLine($"InspectModel.LoadImageFromParams({opParams})");
+
+            int imgIdx = 0;
+            string[] pms = opParams.Split(';');
+            foreach (string s1 in pms)
+            {
+                var s2 = s1.Trim(); // remove whitespace
+                if (s2.StartsWith("dstimage=")) imgIdx = Convert.ToInt32(s2.Remove(0, 9));
+            }
+
+            // TODO SnapImageFromParams: snap an image and copy to image buffer
+            return false;
+        }
+
+        /// <summary>
         /// Load image from file to dstimage
         /// </summary>
-        /// <param name="filename"></param>
+        /// <param name="opParams"></param>
         /// <returns></returns>
         public bool LoadImageFromParams(string opParams)
         {
@@ -768,14 +796,35 @@ namespace Visutronik.Inspektion
 
         #endregion
 
+
+
         public bool OperateFilter(string opParams)
         {
+            Debug.WriteLine($"InspectModel.OperateFilter({opParams})");
+
             // TODO OperateFilter(...)
+            int srcimgNr = 0, dstimgNr = 0;
             string[] pms = opParams.Split(';');
             foreach (string s1 in pms)
             {
                 var s2 = s1.Trim(); // remove whitespace
+                if (s2.StartsWith("srcimage=")) srcimgNr = Convert.ToInt32(s2.Remove(0, 9));
+                if (s2.StartsWith("dstimage=")) dstimgNr = Convert.ToInt32(s2.Remove(0, 9));
             }
+
+            if (imgSource == null)
+            {
+                LastError = "Source image is null";
+                return false;
+            }
+
+            // TODO echte Filteroperation
+            imgDest = (Bitmap) imageList[srcimgNr].Clone();
+            imageList[dstimgNr] = imgDest;
+
+            // send image to main form
+            ImageProcessed?.Invoke(imgDest);
+
             return true;
         }
 
@@ -790,15 +839,31 @@ namespace Visutronik.Inspektion
             bool result = true;
             try
             {
-                switch (i.OperatorIdx)
-                {
-                    case 0:
+                string opParams = i.OperationParams;
+                int checkerType = 0;
+                int filterType = 0;
 
+                string[] pms = opParams.Split(';');
+                foreach (string s1 in pms)
+                {
+                    var s2 = s1.Trim().ToUpper();   // remove whitespace / upper case
+                    if (s2.StartsWith("MEAN")) checkerType = 0;
+                    if (s2.StartsWith("LENG")) checkerType = 1;
+                    if (s2.StartsWith("OBJE")) checkerType = 2;
+                    if (s2.StartsWith("BW-R")) checkerType = 3;
+                    if (s2.StartsWith("FILTER_MEAN")) filterType = 0;
+                    if (s2.StartsWith("FILTER_EDGE")) filterType = 1;
+                    if (s2.StartsWith("FILTER_BIN")) filterType = 2;
+                }
+
+                // TODO echte Checkeroperation
+                switch (checkerType)
+                {
+                    case 0:             // "Mean" -> 
                         break;
-                    case 1:
+                    case 2:             // "Object" -> Blobfinder
                         break;
                 }
-                // TODO echte Checkeroperation
                 // hier Methode mit Inhalt füllen
             }
             catch (Exception ex)
@@ -811,6 +876,17 @@ namespace Visutronik.Inspektion
             return result;
         }
 
+        /// <summary>
+        /// Führt mathematische Operationen aus
+        /// </summary>
+        /// <param name="opParams"></param>
+        /// <returns></returns>
+        public bool MathOperation(string opParams)
+        {
+            LastError = "nicht implementiert";
+            Debug.WriteLine($"MathOperation({opParams}): " + LastError);
+            return false;
+        }
     }
 }
 

@@ -11,7 +11,8 @@
 // 31.01.2023   1.0.0.8 chg DlgInstruction, add InstructionEnums.cs
 // 03.02.2023   1.0.0.9 viel geändert!!!
 // 16.10.2023   1.0.1.0 GIT-Version, chg mouse operations
-// 
+// 17.10.2023   1.0.1.0 viel geändert!!!
+
 //TODO checker property dialog -> DlgInstruction, change checker size & position
 
 using System;
@@ -42,7 +43,7 @@ namespace Visutronik.InspektTest
         const bool DEBUG_PICTBOX1 = true;
 
         const string PROG_NAME = "InspektTest";
-        const string PROG_VERSION = "1.0.1.0";
+        const string PROG_VERSION = "1.0.1.1";
         const string PROG_VENDOR = "Visutronik GmbH";
 
         // class instances
@@ -81,7 +82,22 @@ namespace Visutronik.InspektTest
         };
 
         private Color[] checkercolor = { Color.Yellow, Color.Pink, Color.Green };
-            
+
+        // Verzeichnisse
+        const string STR_PROJECTPATH = @"D:\temp\JuS";
+        const string STR_PARAMPATH = "Parameter";
+        const string STR_PRODUKTPATH = "Produkte";
+        const string STR_LOGPATH = "Log";
+        const string STR_INITPATH = "Init";
+        const string STR_IMAGEPATH = "Bilder";
+
+        string strProjektPfad   = "";
+        string strParamPfad     = "";
+        string strProduktPfad   = "";
+        string strLogPfad       = "";
+        string strInitPfad      = "";
+        string strBilderPfad    = "";
+
         #endregion
 
         #region ===== form and form ctrl handlers =======================================================
@@ -98,7 +114,7 @@ namespace Visutronik.InspektTest
             model.ShowCheckerCircle += OverlayDrawCheckerCircle;
             model.OnOperationReady += OperationReady;
 
-       }
+        }
 
         private void OperationReady(InstructionParams instruction, bool result)
         {
@@ -112,18 +128,40 @@ namespace Visutronik.InspektTest
         /// <param name="e"></param>
         private void OnFormLoad(object sender, EventArgs e)
         {
-            settings.SetSettingsPath(appData.ApplicationFolderPath);
+            bool result = true;
 
+            settings.SetSettingsPath(appData.ApplicationFolderPath);
             if (!settings.LoadSettings())
             {
                 MessageBox.Show("Fehler beim Laden der Programmeinstellungen!", this.Text);
             }
             else
             {
-                FileTools.EnsureFolderExist(settings.LogFolder);
-                FileTools.EnsureFolderExist(settings.ImageFolder);
-                FileTools.EnsureFolderExist(settings.InstructionFolder);
+                result &= FileTools.EnsureFolderExistAsync(settings.LogFolder);
+                result &= FileTools.EnsureFolderExistAsync(settings.ImageFolder);
+                result &= FileTools.EnsureFolderExistAsync(settings.InstructionFolder);
             }
+
+            if (result)
+            {
+                logger.SetFolder(settings.LogFolder);
+                logger.Enabled = true;
+            }
+            else
+            {
+                logger.Enabled = false;
+                // alternative Pfade erzeugen:
+                if (CheckVerzeichnisse(settings.ProjFolder))
+                {
+                    settings.LogFolder = strLogPfad;
+                    settings.ImageFolder = strBilderPfad;
+                    settings.InstructionFolder = strParamPfad;
+                    settings.SaveSettings();
+                    logger.SetFolder(settings.LogFolder);
+                    logger.Enabled = true;
+                }
+            }
+
 
             pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBox2.SizeMode = PictureBoxSizeMode.Zoom;
@@ -189,7 +227,7 @@ namespace Visutronik.InspektTest
             // @"d:\Temp\JUS\Kamerabilder\Lage_3+4\3a.bmp"
             LoadImage();
         }
- 
+
         /// <summary>
         /// Load instruction list from file
         /// </summary>
@@ -211,7 +249,7 @@ namespace Visutronik.InspektTest
             Einstellungen();
         }
 
- 
+
         private void OnMenuExit_Click(object sender, EventArgs e)
         {
             Close();
@@ -292,13 +330,11 @@ namespace Visutronik.InspektTest
                 DiagBox("neue Test-Anweisungsliste");
                 model.CreateTestInstructions();
 
-
                 foreach (var o in model)
                 {
                     Debug.WriteLine(o.ToString()); // "Visutronik.Inspektion.Instruction"
                     Debug.WriteLine(o.OperationParams);
                 }
-
             }
         }
 
@@ -337,7 +373,7 @@ namespace Visutronik.InspektTest
 
         private void OverlayDrawCheckerRect(RectangleF rect, int colorindex)
         {
-            Debug.WriteLineIf(DEBUG_OVL_DRAW, $"OverlayDrawCheckerRect({rect}, {colorindex})");
+            Debug.WriteLineIf(DEBUG_OVL_DRAW, $"OverlayDrawCheckerRect(rect={rect}, col={colorindex})");
             System.Drawing.Color color = checkercolor[colorindex];
             ovl?.DrawRectangleF(rect, color);
             PointF ptAnfasser = new PointF(rect.X, rect.Y);
@@ -349,7 +385,7 @@ namespace Visutronik.InspektTest
 
         private void OverlayDrawCheckerCircle(CircleF circle, int colorindex)
         {
-            Debug.WriteLineIf(DEBUG_OVL_DRAW, $"OverlayDrawCheckerCircle: {circle.center}, {circle.radius}");
+            Debug.WriteLineIf(DEBUG_OVL_DRAW, $"OverlayDrawCheckerCircle: center={circle.center}, r={circle.radius}, col={colorindex}");
             System.Drawing.Color color = checkercolor[colorindex];
 
             ovl?.DrawCircle(circle.center, circle.radius, color);
@@ -360,6 +396,21 @@ namespace Visutronik.InspektTest
             ptAnfasser.X += circle.radius;
             ovl?.DrawCircleMarker(ptAnfasser, color);
         }
+
+        private void OverlayDrawCheckerLine(LineF line, int colorindex)
+        {
+            Debug.WriteLineIf(DEBUG_OVL_DRAW, $"OverlayDrawCheckerLine: {line.P1}, {line.P2}, col={colorindex}");
+            System.Drawing.Color color = checkercolor[colorindex];
+
+            ovl?.DrawLine(line.P1, line.P2, color);
+
+            PointF ptAnfasser = line.P1;
+            ovl?.DrawCircleMarker(ptAnfasser, color);
+
+            ptAnfasser = line.P2;
+            ovl?.DrawCircleMarker(ptAnfasser, color);
+        }
+
         #endregion
 
         #endregion === form handlers ===
@@ -453,9 +504,13 @@ namespace Visutronik.InspektTest
                 IsCreatingChecker = true;
                 ovl2.ClearOverlay();
             }
-            if (ModifyMode)
+            else if (ModifyMode)
             {
-
+                // Position des Checkers 
+            }
+            else
+            {
+                // Inspect-Mode: Maus ignorieren
             }
         }
 
@@ -500,7 +555,7 @@ namespace Visutronik.InspektTest
                     }
                 }
                 ovl2.ClearOverlay();
-                ShowImage();  // in setup mode when mouse is moved
+                ShowImage();  // mouse up in setup mode when mouse was moved
             }
             else if (ModifyMode)
             {
@@ -515,7 +570,7 @@ namespace Visutronik.InspektTest
             }
             else
             {
-                // Inspekt-Modus
+                // Inspekt-Modus, Maus ignorieren
             }
         }
 
@@ -543,7 +598,7 @@ namespace Visutronik.InspektTest
                 Rectangle r = InstructionHelper.GetNormalizedRectangleFromPoints(ptMouseDown, ptMousePos);
                 ovl2.ClearOverlay();
                 ovl2.DrawRectangle(r, Color.Yellow);
-                ShowImage();    // in setup mode
+                ShowImage();    // mouse move in setup mode
             }
         }
 
@@ -583,6 +638,10 @@ namespace Visutronik.InspektTest
 
                         model.UnselectAllObjects();
                         model.SelectObject(currentInstruction.Number);
+
+                        // PictureBox neu zeichnen:
+
+                        ShowImage();    // in setup mode
                     }
                 }
             }
@@ -594,39 +653,35 @@ namespace Visutronik.InspektTest
 
         #region ===== Helper methods ====================================================================
 
+
         private void LoadImage()
         {
             string imgpath = settings.LastImage;
-            Debug.WriteLine("ProgSettings: " + imgpath);
-            //if (imgpath == "") imgpath = @"d:\Temp\JUS\Kamerabilder\3a.bmp";
-            //imgpath = Path.Combine(settings.ImageFolder, @"Lage_3+4\3a.bmp");
-            //if (!FileTools.CheckFileExist(imgpath, 50))
-            {
-                // TODO add FileOpenDialog to select image
-                OpenFileDialog ofd = new OpenFileDialog()
-                {
-                    Filter = "Image files (*.bmp)|*.bmp" + "|all files (*.*)|*.*",
-                    InitialDirectory = settings.ImageFolder,
-                    DefaultExt = "bmp",
-                    FileName = imgpath,
-                    Multiselect = false,
-                };
+            Debug.WriteLine("From ProgSettings: " + imgpath);
 
-                if (ofd.ShowDialog() == DialogResult.OK)
+            OpenFileDialog ofd = new OpenFileDialog()
+            {
+                Filter = "Image files (*.bmp)|*.bmp" + "|all files (*.*)|*.*",
+                InitialDirectory = settings.ImageFolder,
+                DefaultExt = "bmp",
+                FileName = imgpath,
+                Multiselect = false,
+            };
+
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                imgpath = ofd.FileName;
+
+                if (model.LoadImageFromFile(imgpath))
                 {
-                    imgpath = ofd.FileName;
+                    settings.LastImage = imgpath;
+                    // srcImage und Overlays werden in callback Model_ImageLoaded() erzeugt!
+                    ShowImage();    // after load image
                 }
-            }
-
-            if (model.LoadImageFromFile(imgpath))
-            {
-                settings.LastImage = imgpath;
-                // srcImage und Overlays werden in callback Model_ImageLoaded() erzeugt!
-                ShowImage();    // after load image
-            }
-            else
-            {
-                DiagBox("Fehler: kein Bild geladen!");
+                else
+                {
+                    DiagBox("Fehler: kein Bild geladen!");
+                }
             }
         }
 
@@ -682,7 +737,7 @@ namespace Visutronik.InspektTest
                     {
                         ovl.ClearOverlay();
                         ovl2.ClearOverlay();
-                        
+
                         model.GetCheckers();  // Checkers in Overlay anzeigen:
                         ShowImage();          // Bild mit Overlay anzeigen (load instructions)
                     }
@@ -742,15 +797,15 @@ namespace Visutronik.InspektTest
             DiagBox("Do the test...");
             bool result;
             DiagBox("1. Bild laden");
-            //DiagBox("Bild laden");
+            DiagBox($"    {settings.LastImage}");
             result = model.LoadImageFromFile(settings.LastImage);
-            //if (!LoadSourceImage(settings.LastImage)) return;
+            if (!result) { DiagBox("Fehler!"); return; }
 
             DiagBox("2. Anweisungsliste laden");
-            //model.CreateNewInstructions();
+            DiagBox($"    {settings.LastInstruction}");
             //model.CreateTestInstructions();
-            model.LoadInstructionsFromFile(settings.LastInstruction);
-
+            result = model.LoadInstructionsFromFile(settings.LastInstruction);
+            if (!result) { DiagBox("Fehler!"); return; }
 
             // test some drawing to overlay bitmap:
             if (ovl != null)
@@ -766,6 +821,7 @@ namespace Visutronik.InspektTest
 
             DiagBox("3. Test ausführen");
             result = model.Inspect();
+            if (!result) { DiagBox("Fehler!"); return; }
 
             DiagBox("4. Testergebnis anzeigen");
 
@@ -793,9 +849,9 @@ namespace Visutronik.InspektTest
                 ovl.DrawStringCentric(
                     strErgebnis,
                     new Point(imgSource.Width / 2, imgSource.Height - 50),
-                    Color.Red, new Font(FontFamily.GenericSansSerif, 36.0f) );
+                    Color.Red, new Font(FontFamily.GenericSansSerif, 36.0f));
             }
-            ShowImage();
+            ShowImage();    // after DoTheTest
         }
 
         /// <summary>
@@ -985,18 +1041,32 @@ namespace Visutronik.InspektTest
         }
 
         /// <summary>
-        /// Stringausgabe in Listbox listBox1
+        /// Stringausgabe in Listbox listBox1, threadsafe
         /// </summary>
-        /// <param name="msg"></param>
+        /// <param name="msg">string to append to listbox</param>
         void DiagBox(string msg)
         {
+            int MAX_LBX_ITEMS = 250;
+
             // am Ende einfügen und den letzten Eintrag sichtbar machen:
-            listBox1.Items.Add(msg);
-            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+            //listBox1.Items.Add(msg);
+            //listBox1.SelectedIndex = listBox1.Items.Count - 1;
 
             // immer ersten Eintrag sichtbar machen, z.B. für Fehlerlog:
             // lbDiagnose.Items.Insert(0, msg);
             // lbDiagnose.SelectedIndex = -1;
+
+            listBox1.BeginInvoke(new Action(() =>
+            {
+                if (listBox1.Items.Count > MAX_LBX_ITEMS) listBox1.Items.RemoveAt(0);
+                listBox1.Items.Add(msg);
+
+                //scroll to last item and highlight it
+                //listBox1.SelectedIndex = listBox1.Items.Count - 1;
+
+                // If you only want to scroll to the bottom and not change user's selection:
+                listBox1.TopIndex = listBox1.Items.Count - 1;
+            }));
 
             Debug.WriteLine(msg);
         }
@@ -1081,6 +1151,8 @@ namespace Visutronik.InspektTest
         /// <returns><c>Point</c>Koordinaten im Kamerabild</returns>
         private System.Drawing.Point PictureboxZuBild(System.Drawing.Point ptPicture)
         {
+            // TODO PictureboxZuBild: unterschiedliche PictureBoxen können unterschiedl. ptZero / PictZoom aufweisen!
+
             double dPictX = (double)ptPicture.X;
             double dPictY = (double)ptPicture.Y;
 
@@ -1194,6 +1266,52 @@ namespace Visutronik.InspektTest
         #endregion
 
         #endregion GUI helper methods
+
+        #region ===== App helper methods ====================================================================
+
+
+        /// <summary>
+        /// Überprüft Vorhandensein der erforderlichen Verzeichnisstruktur
+        /// </summary>
+        /// <returns>true wenn alle Verzeichnisse existieren</returns>
+        private bool CheckVerzeichnisse(string projPath = STR_PROJECTPATH)
+        {
+            Debug.WriteLine($"MainForm.CheckVerzeichnisse({projPath})");
+
+            bool result = true;
+            string msg = "";
+            try
+            {
+                this.strProjektPfad = projPath;
+                this.strParamPfad = Path.Combine(projPath, STR_PARAMPATH);
+                this.strProduktPfad = Path.Combine(projPath, STR_PRODUKTPATH);
+                this.strLogPfad = Path.Combine(projPath, STR_LOGPATH);
+                this.strInitPfad = Path.Combine(projPath, STR_INITPATH);
+                this.strBilderPfad = Path.Combine(projPath, STR_IMAGEPATH);
+
+                result &= FileTools.EnsureFolderExistAsync(strProjektPfad, 100);
+                result &= FileTools.EnsureFolderExistAsync(strParamPfad, 100);
+                result &= FileTools.EnsureFolderExistAsync(strLogPfad, 100);
+                //result &= FileTools.EnsureFolderExistAsync(strInitPfad, 100);
+                //result &= FileTools.EnsureFolderExistAsync(strProduktPfad, 100);
+                result &= FileTools.EnsureFolderExistAsync(strBilderPfad, 100);
+            }
+            catch (IOException ex)
+            {
+                msg = "CheckVerzeichnisse(): " + ex.Message;
+                result = false;
+            }
+            catch (Exception ex)
+            {
+                msg = "CheckVerzeichnisse(): " + ex.Message;
+                result = false;
+            }
+            return result;
+        }
+
+
+
+        #endregion
 
     }
 }

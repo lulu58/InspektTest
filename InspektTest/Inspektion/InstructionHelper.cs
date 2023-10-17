@@ -1,9 +1,10 @@
-﻿/// Helper methods for image operation instructions
-///
-/// - parameter converters (rectangle, circle, line)
-/// - mouse helpers
-/// - rectangle tools
-/// 23.01.2023
+﻿// Helper methods for image operation instructions
+//
+// - parameter converters (rectangle, circle, line)
+// - mouse helpers
+// - rectangle tools
+// 23.01.2023
+// 17.10.2023 
 
 using System;
 using System.Collections.Generic;
@@ -31,6 +32,10 @@ namespace Visutronik.Inspektion
 
         public static string[] AreaNames = new string[] { 
             "Vollbild", "Rechteck", "Kreis", "Kreisring", "Kreissegment", "Linie" };
+
+        public static string[] EvalTypes = new string[] {
+            "Compare" };
+
 
         public static int GetAreaIndex(string area)
         {

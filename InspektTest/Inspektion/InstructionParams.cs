@@ -39,8 +39,13 @@ namespace Visutronik.Inspektion
 
         // area
         public int CameraIndex { get; set; } = 0;
+
         public int ImageIndex { get; set; } = 0;
-        public int ImageAreaIndex { get; set; } = 0;
+
+        // checker form
+        public int ImageAreaIndex { get; set; } = 0;    
+
+        // checker size
         public string ImageAreaParams { get; set; } = string.Empty;
 
         // operation
@@ -190,9 +195,9 @@ namespace Visutronik.Inspektion
 
         #endregion
 
-        #region --- internal methods ---
+        #region --- param check methods ---
 
-        private bool CheckImageAreaParameters()
+        public bool CheckImageAreaParameters()
         {
             Debug.WriteLineIf(DIAG_PARAMS, "Instruction.CheckImageParameters(): " + ImageAreaIndex + " - " + ImageAreaParams);
             if (ImageAreaIndex == (int)ImageAreaType.Rect)
@@ -230,7 +235,7 @@ namespace Visutronik.Inspektion
         /// 
         /// </summary>
         /// <returns></returns>
-        private bool CheckOperationParameters()
+        public bool CheckOperationParameters()
         {
             Debug.WriteLineIf(DIAG_PARAMS, "Instruction.CheckOperationParameters(): ");
             opType = OperatorType.None;
@@ -239,12 +244,16 @@ namespace Visutronik.Inspektion
                 Debug.WriteLine(" Operation = " + Operation);
                 switch (Operation)
                 {
+                    case "":
+                        opType = OperatorType.SnapImage; break;
                     case "ImageLoad":
                         opType = OperatorType.LoadImage; break;
                     case "ImageFilter":
                         opType = OperatorType.Filter; break;
                     case "Checker":
                         opType = OperatorType.Checker; break;
+                    case "MathOp":
+                        opType = OperatorType.MathOp; break;
                     //TODO add weitere OperatorType ...
                     default:
                         throw new Exception("unknown operation");
@@ -257,12 +266,17 @@ namespace Visutronik.Inspektion
                 Debug.WriteLineIf(DIAG_PARAMS, " OperationParams = " + OperationParams);
                 switch (opType)
                 {
+                    case OperatorType.SnapImage:
+                        break;
                     case OperatorType.LoadImage:
                         break;
                     case OperatorType.Filter:
                         break;
                     case OperatorType.Checker:
                         break;
+                    case OperatorType.MathOp:
+                        break;
+
                 }
             }
 
@@ -284,7 +298,7 @@ namespace Visutronik.Inspektion
 
         #region --- real operation ---
 
-        // Todo real operation
+        //TODO real operation
 
         #endregion
 
