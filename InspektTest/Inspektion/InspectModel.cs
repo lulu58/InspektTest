@@ -2,10 +2,9 @@
  * Projekt  : Inspect / InspectTest
  * Datei    : model - Organisation des Ablaufes einer Inspektion
  * Benutzer : Lulu
- * Erstellt mit SharpDevelop.
  * 10/25/2018 initial
  * 19.12.2022	add json serialization
- *				begin coding Operate()
+ * 18.10.2023	add events, ...
  */
 
 using System;
@@ -24,8 +23,6 @@ namespace Visutronik.Inspektion
     /// </summary>
     public class InspectModel : IEnumerable<InstructionParams>
     {
-        public bool ExtendedDiagnostics { get; set; } = false;
-
         #region ----- events ----------------------------------------------
 
         // Signalisierung der Checker mit Event:
@@ -70,22 +67,27 @@ namespace Visutronik.Inspektion
         /// </summary>
         public string LastError { get; internal set; } = "";
 
-        public bool ModifiedFlag { get; internal set; } = false;
-        /// <summary>
-
         /// <summary>
         /// 
         /// </summary>
-        //private Instructions instructions = new Instructions();
+        public bool ModifiedFlag { get; internal set; } = false;
 
-        public bool HasInstructionList()
+        /// <summary>
+        /// Get info about instruction list
+        /// </summary>
+        /// <returns>true if instruction list is created or loaded</returns>
+        public bool HasInstructions()
         {
             return instructionList.Count > 0;
         }
 
-        private bool InspectionStop { get; set; } = false;
+        // Stop flag for operations in instruction list
+        private bool stopInspection = false;
+
 
         private List<Bitmap> imageList = new List<Bitmap>();
+
+        private List<ICamera> cameraList = new List<ICamera>();
 
         private Bitmap imgSource;
         private Bitmap imgDest;
@@ -106,18 +108,23 @@ namespace Visutronik.Inspektion
             }
         }
 
-        // wichtig!
+        #region --- Interface methods ---
+
+        // wichtig wegen IEnumerable<InstructionParams>!
         public IEnumerator<InstructionParams> GetEnumerator()
         {
             return instructionList.GetEnumerator();
         }
 
-        // wichtig!
+        // wichtig wegen IEnumerable<InstructionParams>!
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
 
+        #endregion
+
+        public void AddCamera(ICamera camera) => cameraList.Add(camera);
 
         public Bitmap GetImage(int idx)
         {
@@ -132,7 +139,7 @@ namespace Visutronik.Inspektion
         /// </summary>
         public void CreateNewInstructions()
         {
-            Debug.WriteLineIf(ExtendedDiagnostics, "Model.CreateNewInstructions()");
+            Debug.WriteLine("Model.CreateNewInstructions()");
             instructionList.Clear();
             ModifiedFlag = true;
         }
@@ -146,10 +153,10 @@ namespace Visutronik.Inspektion
         {
             Debug.WriteLine("--- Model.Inspect() ---");
             bool result = true;
-            InspectionStop = false;
+            stopInspection = false;
             LastError = "Inspektion ok";
 
-            if (HasInstructionList())
+            if (HasInstructions())
             {
                 try
                 {
@@ -160,7 +167,7 @@ namespace Visutronik.Inspektion
                         // Callback -> Resultate an GUI
                         OnOperationReady?.Invoke(iparam, result);
 
-                        if (InspectionStop)
+                        if (stopInspection)
                         {
                             LastError = "Inspektion gestoppt";
                             result = false;
@@ -192,8 +199,8 @@ namespace Visutronik.Inspektion
         /// </summary>
         public void StopInspect()
         {
-            Debug.WriteLineIf(ExtendedDiagnostics, "Model.StopInspect()");
-            InspectionStop = true;
+            Debug.WriteLine("Model.StopInspect()");
+            stopInspection = true;
         }
 
         /// <summary>
@@ -202,7 +209,7 @@ namespace Visutronik.Inspektion
         /// <returns></returns>
         public bool CloseInspect()
         {
-            Debug.WriteLineIf(ExtendedDiagnostics, "Model.CloseInspect()");
+            Debug.WriteLine("Model.CloseInspect()");
             bool result = true;
             try
             {
@@ -225,24 +232,29 @@ namespace Visutronik.Inspektion
         /// <returns>true if success</returns>
         public bool DrawCheckersToOverlay()
         {
-            Debug.WriteLineIf(ExtendedDiagnostics, "InspectModel.GetCheckers()");
+            Debug.WriteLine("InspectModel.DrawCheckersToOverlay()");
 
             bool result = true;
-            InspectionStop = false;
-            LastError = "GetCheckers ok";
+            stopInspection = false;
+            LastError = "ok";
 
-            if (this.HasInstructionList())
+            if (this.HasInstructions())
             {
                 try
                 {
                     foreach (var i in instructionList)
                     {
-                        Debug.WriteLineIf(ExtendedDiagnostics, $" - {i.Name}: {i.Operation}, selected={i.IsSelected}");
+                        string operation = InstructionHelper.Operations[i.OperationIdx];
+                        Debug.WriteLine($" - {i.Name}: {operation}, selected={i.IsSelected}");
 
-                        if (i.Operation == "Checker")
+                        //if (i.Operation == "Checker")
+                        if (i.OperationIdx == (int)OperationType.Checker)
                         {
                             int colorindex = i.IsSelected ? 1 : 0; // erweiterungsfähig auf mehr Eigenschaften...
-                            Debug.WriteLineIf(ExtendedDiagnostics, $"  colorindex={colorindex}");
+                            if (i.ResultSuccess) colorindex += 2;
+                            else colorindex += 4;
+
+                            Debug.WriteLine($"  colorindex={colorindex}");
                             //Debug.WriteLine($"  {i.ImageArea}: {i.ImageAreaParams}");
                             if (i.ImageAreaIndex == (int)ImageAreaType.Rect)            // 1
                             {
@@ -262,13 +274,13 @@ namespace Visutronik.Inspektion
 
                             if (i.ImageAreaIndex == (int)ImageAreaType.Ring)            // 3
                             {
-                                // TODO DrawCheckersToOverlay - Ring
+                                // TODO Ring
                                 continue;
                             }
 
                             if (i.ImageAreaIndex == (int)ImageAreaType.CircleSegment)   // 4
                             {
-                                // TODO DrawCheckersToOverlay - CircleSegment
+                                // TODO CircleSegment
                                 continue;
                             }
 
@@ -295,7 +307,7 @@ namespace Visutronik.Inspektion
 
             if (!result)
             {
-                Debug.WriteLine("GetCheckers()" + LastError);
+                Debug.WriteLine("DrawCheckersToOverlay(): " + LastError);
                 OutMsg(LastError);
             }
             return result;
@@ -315,14 +327,14 @@ namespace Visutronik.Inspektion
                 // try to find an inspection object in instructions
                 foreach (var i in instructionList)
                 {
-                    if (i.Operation == "Checker")
+                    if (i.OperationIdx == (int)OperationType.Checker)
                     {
                         string areaName = InstructionHelper.AreaNames[i.ImageAreaIndex];
 
-                        Debug.WriteLineIf(ExtendedDiagnostics, $" Is mouse point in Checker {i.Name} - {areaName}?");
+                        Debug.WriteLine($" Is mouse point in Checker {i.Name} - {areaName}?");
                         if (i.PointIsInside(pt))
                         {
-                            Debug.WriteLine($"point is in checker {i.Name}");
+                            Debug.WriteLine("  YES!");
                             fi = i; break;
                         }
                     }
@@ -348,13 +360,13 @@ namespace Visutronik.Inspektion
                 // try to find an inspection object in instructions
                 foreach (var i in instructionList)
                 {
-                    if (i.Operation == "Checker")
+                    if (i.OperationIdx == (int)OperationType.Checker)
                     {
                         i.IsSelected = false;
-                        Debug.WriteLineIf(ExtendedDiagnostics, $"unselect checker {i.Number}");
+                        Debug.WriteLine($"unselect checker {i.Number}");
                     }
                 }
-                Debug.WriteLineIf(ExtendedDiagnostics, "UnselectAllObjects");
+                Debug.WriteLine("UnselectAllObjects");
             }
             catch (Exception ex)
             {
@@ -378,7 +390,7 @@ namespace Visutronik.Inspektion
                 // try to find an inspection object in instructions
                 foreach (var i in instructionList)
                 {
-                    if (i.Operation == "Checker" && i.Number == idx)
+                    if (i.OperationIdx == (int)OperationType.Checker && i.Number == idx)
                     {
                         Debug.WriteLine($"select checker {idx}");
                         i.IsSelected = true;
@@ -391,7 +403,7 @@ namespace Visutronik.Inspektion
                 LastError = ex.Message;
                 OutMsg(LastError);
             }
-            return true;
+            return true; 
         }
 
         /// <summary>
@@ -407,13 +419,13 @@ namespace Visutronik.Inspektion
 
             i.Number = instructionList.Count;
             i.Name = "SimpleRectChecker";
-            i.CameraIndex = 0;
+            i.CameraIdx = 0;
 
             i.ImageIndex = 0;
             i.ImageAreaIndex = 0;
             i.ImageAreaParams = InstructionHelper.GetStringFromRectangle(r);
 
-            i.Operation = "Checker";
+            i.OperationIdx = (int)OperationType.Checker;
             i.OperationParams = "";
 
             i.ResultError = "";
@@ -426,7 +438,7 @@ namespace Visutronik.Inspektion
         #region --- instruction list methods -----------------
 
         /// <summary>
-        /// 
+        /// Add a complete instruction to list
         /// </summary>
         /// <param name="instruction">single instruction</param>
         /// <returns>true if success</returns>
@@ -477,6 +489,9 @@ namespace Visutronik.Inspektion
                     instructionList = (List<InstructionParams>)serializer.Deserialize(file, typeof(List<InstructionParams>));
                 }
                 ModifiedFlag = false;
+
+                //if (string.IsNullOrEmpty(InstructionFile)) 
+                    InstructionFile = path;
             }
             catch (Exception ex)
             {
@@ -512,8 +527,12 @@ namespace Visutronik.Inspektion
         public bool SaveInstructionsToFile()
         {
             Debug.WriteLine("Model.SaveInstructions()");
-
-            return SaveInstructionsToFile(InstructionFile, ModifiedFlag);
+            bool result = true;
+            if (ModifiedFlag)
+            {
+                result = SaveInstructionsToFile(InstructionFile);
+            }
+            return result;
         }
 
         /// <summary>
@@ -521,43 +540,38 @@ namespace Visutronik.Inspektion
         /// </summary>
         /// <param name="path">path to file</param>
         /// <returns>true if success</returns>
-        public bool SaveInstructionsToFile(string path, bool modifyFlag = true)
+        public bool SaveInstructionsToFile(string path)
         {
-            Debug.WriteLine($"InspectModel.SaveToFile({path}, {modifyFlag})");
-
-            bool result = true;
-            if (modifyFlag)
+            Debug.WriteLine($"InspectModel.SaveToFile({path})");
+            bool result = instructionList.Count > 0;
+            if (result)
             {
-                result = instructionList.Count > 0;
-                if (result)
+                try
                 {
-                    try
+                    JsonSerializer serializer = new JsonSerializer();
+                    serializer.NullValueHandling = NullValueHandling.Ignore;
+                    using (StreamWriter sw = new StreamWriter(path))
+                    using (JsonWriter writer = new JsonTextWriter(sw))
                     {
-                        JsonSerializer serializer = new JsonSerializer();
-                        serializer.NullValueHandling = NullValueHandling.Ignore;
-                        using (StreamWriter sw = new StreamWriter(path))
-                        using (JsonWriter writer = new JsonTextWriter(sw))
-                        {
-                            writer.Formatting = Formatting.Indented;
-                            serializer.Serialize(writer, instructionList);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        LastError = ex.Message;
-                        result = false;
+                        writer.Formatting = Formatting.Indented;
+                        serializer.Serialize(writer, instructionList);
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    LastError = "Anweisungsliste ist leer!";
+                    LastError = ex.Message;
+                    result = false;
                 }
+            }
+            else
+            {
+                LastError = "Anweisungsliste ist leer!";
             }
             return result;
         }
 
         /// <summary>
-        /// 
+        /// Testliste erzeugen
         /// </summary>
         /// <returns>true if success</returns>
         public bool CreateTestInstructions()
@@ -568,22 +582,31 @@ namespace Visutronik.Inspektion
             {
                 instructionList.Clear();
 
+                InstructionParams inst0 = new InstructionParams();
+                inst0.Number = instructionList.Count;
+                inst0.Name = "Kamerabild";
+                inst0.Description = "";
+                inst0.OperationIdx = (int)OperationType.SnapImage;
+                inst0.OperationParams = @"dstimage=1";
+                inst0.CameraIdx = 0;
+                instructionList.Add(inst0);
+
                 InstructionParams inst1 = new InstructionParams();
                 inst1.Number = instructionList.Count;
                 inst1.Name = "LoadImage";
                 inst1.Description = "Load image from file";
-                inst1.Operation = "ImageLoad";
+                inst1.OperationIdx = (int)OperationType.LoadImage;
                 inst1.OperationParams = @"file=d:\Temp\JUS\Kamerabilder\Lage_3+4\3a.bmp; dstimage=1";
-                inst1.CameraIndex = 0;
-                instructionList.Add(inst1);
+                inst1.CameraIdx = 0;
+                //instructionList.Add(inst1);
 
                 InstructionParams inst2 = new InstructionParams();
                 inst2.Number = instructionList.Count;
                 inst2.Name = "GlobalBinarization";
                 inst2.Description = "Global binarization using Otzu's algorithm";
-                inst2.Operation = "ImageFilter";
+                inst2.OperationIdx = (int)OperationType.Filter;
                 inst2.OperationParams = "Algo=Otzu; srcimage=1; dstimage=2";
-                inst1.CameraIndex = 0;
+                inst1.CameraIdx = 0;
                 instructionList.Add(inst2);
 
                 InstructionParams inst3 = new InstructionParams();
@@ -593,9 +616,9 @@ namespace Visutronik.Inspektion
                 inst3.ImageIndex = 0;
                 inst3.ImageAreaIndex = (int)ImageAreaType.Rect;   // "Rect"
                 inst3.ImageAreaParams = "{100, 100, 50, 50}";
-                inst3.Operation = "Checker";
+                inst3.OperationIdx = (int)OperationType.Checker;
                 inst3.OperationParams = "BlackWhiteRatio; ";
-                inst3.Evaluation = "Contrast";
+                inst3.EvaluationIdx = (int) EvalType.Contrast;
                 inst3.EvaluationParams = "Min=20";
                 instructionList.Add(inst3);
 
@@ -606,10 +629,10 @@ namespace Visutronik.Inspektion
                 inst4.ImageIndex = 0;
                 inst4.ImageAreaIndex = (int)ImageAreaType.Rect;   // "Rect"
                 inst4.ImageAreaParams = "{200, 200, 50, 50}";
-                inst4.Operation = "Checker";
+                inst4.OperationIdx = (int)OperationType.Checker;
                 inst4.OperationParams = "FindObject";
-                inst4.Evaluation = "Color=Black; Min=30";
-                inst4.EvaluationParams = "";
+                inst4.EvaluationIdx = (int)EvalType.Blob;
+                inst4.EvaluationParams = "Color=Black; MinSize=30";
                 instructionList.Add(inst4);
 
                 InstructionParams inst5 = new InstructionParams();
@@ -620,10 +643,10 @@ namespace Visutronik.Inspektion
                 inst5.ImageIndex = 0;
                 inst5.ImageAreaIndex = (int)ImageAreaType.Circle;   // "Rect"
                 inst5.ImageAreaParams = "{660, 400, 150}";
-                inst5.Operation = "Checker";
+                inst5.OperationIdx = (int)OperationType.Checker;
                 inst5.OperationParams = "FindObject";
-                inst5.Evaluation = "Color=Black; Min=30";
-                inst5.EvaluationParams = "";
+                inst5.EvaluationIdx = (int)EvalType.Blob;
+                inst5.EvaluationParams = "Color=Black; Min=30";
                 instructionList.Add(inst5);
 
                 foreach (var i in instructionList)
@@ -678,33 +701,31 @@ namespace Visutronik.Inspektion
                 return false;
             }
 
-            Debug.WriteLine("--- Operate: " + iparam.Name + " : " + iparam.Operation);
+            Debug.WriteLine("--- Operation: " + iparam.Name + " : " + iparam.OperationIdx);
             LastError = "";
-            switch (iparam.Operation)
+            switch (iparam.OperationIdx)
             {
-                case "ImageSnap":
+                case (int) OperationType.SnapImage:
                     //todo set camera params
                     //todo add snap image from camera
                     result = SnapImageFromParams(iparam.OperationParams);
                     break;
-                case "ImageLoad":
-                    result = LoadImageFromParams(iparam.OperationParams);// @"d:\Temp\JUS\Kamerabilder\3a.bmp"
+                case (int) OperationType.LoadImage:
+                    result = LoadImageFromParams(iparam.OperationParams);
                     break;
-                case "ImageFilter":
+                case (int)OperationType.Filter:
                     result = OperateFilter(iparam.OperationParams);
                     break;
-                case "Checker":
-                    Debug.WriteLine("OperateChecker");
+                case (int)OperationType.Checker:
                     result = OperateChecker(ref iparam);
                     break;
-                case "MathOp":
-                    Debug.WriteLine("MathOp");
+                case (int)OperationType.MathOp:
                     result = MathOperation(iparam.OperationParams);
                     break;
 
                 // TODO add more operations
                 default:
-                    throw new Exception($"Operation: {iparam.Operation} not supported");
+                    throw new Exception($"Operation: {iparam.OperationIdx} not supported");
             }
             //Debug.WriteLine($" operation result = {result}, LastError = {LastError}");
             return result;
@@ -756,24 +777,66 @@ namespace Visutronik.Inspektion
 
 
         /// <summary>
-        /// 
+        /// image acquisition from camera
         /// </summary>
         /// <param name="opParams"></param>
         /// <returns></returns>
         public bool SnapImageFromParams(string opParams)
         {
-            Debug.WriteLine($"InspectModel.LoadImageFromParams({opParams})");
+            Debug.WriteLine($"InspectModel.SnapImageFromParams({opParams})");
 
+            bool result = true;
             int imgIdx = 0;
+            int camIdx = 0;
+
             string[] pms = opParams.Split(';');
             foreach (string s1 in pms)
             {
-                var s2 = s1.Trim(); // remove whitespace
-                if (s2.StartsWith("dstimage=")) imgIdx = Convert.ToInt32(s2.Remove(0, 9));
+                var s2 = s1.Trim().ToUpper(); // remove whitespace
+                if (s2.StartsWith("CAMERAIDX")) camIdx = Convert.ToInt32(s2.Remove(0, 10));
+                if (s2.StartsWith("DSTIMAGE")) imgIdx = Convert.ToInt32(s2.Remove(0, 9));
             }
 
+            Debug.WriteLine($" - camIdx = {camIdx}, imgIdx = {imgIdx}");
+            //  - camIdx = 0, imgIdx = 0
+
             // TODO SnapImageFromParams: snap an image and copy to image buffer
-            return false;
+            if ((camIdx > -1) && camIdx < cameraList.Count)
+            {
+                try
+                {
+                    imgSource = cameraList[camIdx].AcquireImage(0);
+                    if (imgSource != null)
+                    {
+                        Debug.WriteLine(" - image im kasten");
+
+                        imageList[imgIdx] = (Bitmap)imgSource.Clone();
+                        //imageList[imgIdx] = imgSource;
+
+                        // send image to main form
+                        //ImageLoaded?.Invoke((Bitmap)imgSource.Clone());
+                        ImageLoaded?.Invoke(imgSource);
+                    }
+                    else
+                    {
+                        LastError = "Kamera: Acquisition Fehler";
+                        result = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LastError = "Ausnahme: " + ex.Message;
+                    Debug.WriteLine(ex);
+                    result = false;
+                }
+            }
+            else
+            {
+                LastError = $"Kamera: Kamera {camIdx} existiert nicht";
+                result = false;
+            }
+            Debug.WriteLine(" - " + LastError);
+            return result;
         }
 
         /// <summary>
@@ -806,15 +869,17 @@ namespace Visutronik.Inspektion
             Debug.WriteLine($"InspectModel.OperateFilter({opParams})");
 
             // TODO OperateFilter(...)
-            int srcimgNr = 0, dstimgNr = 0;
+            int srcIdx = 0, dstIdx = 1;
             string[] pms = opParams.Split(';');
             foreach (string s1 in pms)
             {
                 var s2 = s1.Trim(); // remove whitespace
-                if (s2.StartsWith("srcimage=")) srcimgNr = Convert.ToInt32(s2.Remove(0, 9));
-                if (s2.StartsWith("dstimage=")) dstimgNr = Convert.ToInt32(s2.Remove(0, 9));
+                if (s2.StartsWith("srcimage=")) srcIdx = Convert.ToInt32(s2.Remove(0, 9));
+                if (s2.StartsWith("dstimage=")) dstIdx = Convert.ToInt32(s2.Remove(0, 9));
             }
+            Debug.WriteLine($" - srcimgNr = {srcIdx}, dstimgNr = {dstIdx}");
 
+            imgSource = imageList[srcIdx];
             if (imgSource == null)
             {
                 LastError = "Source image is null";
@@ -822,12 +887,15 @@ namespace Visutronik.Inspektion
             }
 
             // TODO echte Filteroperation
-            imgDest = (Bitmap)imageList[srcimgNr].Clone();
-            imageList[dstimgNr] = imgDest;
+            Debug.WriteLine($" - filtern...");
 
+            //imgDest = (Bitmap) imageList[srcIdx].Clone();
+            //imgDest = new Bitmap(imageList[srcIdx]);
+            //imageList[dstIdx] = imgDest;
+            
             // send image to main form
-            ImageProcessed?.Invoke(imgDest);
-
+            //ImageProcessed?.Invoke(imgDest);
+            Debug.WriteLine($" - fertich...");
             return true;
         }
 

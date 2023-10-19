@@ -12,7 +12,7 @@ namespace Visutronik.Inspektion
     /// <summary>
     /// 
     /// </summary>
-    public enum OperatorType
+    public enum OperationType
     {
         None = -1,
         SnapImage,      // Bild von Kamera holen
@@ -53,6 +53,15 @@ namespace Visutronik.Inspektion
         Ring,
         CircleSegment,
         Line
+    };
+
+    public enum EvalType
+    {
+        None = -1,
+        Contrast,
+        Blob,
+        Size
+        // TODO more EvalTypes
     };
 
 }

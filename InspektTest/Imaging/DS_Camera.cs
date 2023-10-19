@@ -5,6 +5,8 @@
 // Lulu
 // 17.03.2022
 // 17.06.2022   add OpenCameraAsync(), CloseCameraAsync()
+// 18.10.2023   chg Namespace, add ICamera interface 
+//              chg Open(...) to real sync method with boolean result
 
 using System;
 using System.Collections.Generic;
@@ -13,13 +15,97 @@ using System.Diagnostics;
 using AForge.Video;
 using AForge.Video.DirectShow;
 using System.Threading.Tasks;
+using System.Threading;
 
-namespace WebcamAF
+namespace Visutronik.Imaging
 {
-    class DS_Camera
+    class DS_Camera : ICamera
     {
+        #region === interface methods ===============================================================
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public string GetCameraInfo()
+        {
+            return info;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="camidx"></param>
+        /// <param name="camparam"></param>
+        /// <returns></returns>
+        public bool InitCamera(int camidx, string[] camparam)
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="camidx">is ignored, only one camera is active</param>
+        /// <returns></returns>
+        public bool StartCamera(int camidx = 0)
+        {
+            if (!IsRunning)
+            {
+                // erste DS-Kamera öffnen
+                Open(0);
+                Thread.Sleep(100);
+            }
+            return IsRunning;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="camidx">is ignored, only one camera is active</param>
+        /// <returns></returns>
+        public bool StopCamera(int camidx = 0)
+        {
+            if (IsRunning)
+                Close();
+            return IsRunning == false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="camidx">is ignored, only one camera is active</param>
+        /// <returns></returns>
+        public Bitmap AcquireImage(int camidx = 0)
+        {
+            if (IsRunning)
+            {
+                Debug.WriteLine("DS_Camera.AcquireImage - camera is running");
+                return GetBitmap();
+            }
+
+            Debug.WriteLine("DS_Camera.AcquireImage - camera is not running!!!");
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public string GetLastError()
+        {
+            return msg;
+        }
+
+        #endregion
+
+        #region === non interface props, vars, methods =====================================================
+
+        #region --- non interface events and vars ---
+
         public delegate void ImageAvailable(System.Drawing.Bitmap bm);
         public delegate void MessageAvailable(string message);
+
         /// <summary>
         /// subscribers event for images
         /// </summary>
@@ -46,11 +132,20 @@ namespace WebcamAF
         /// <returns>last camera or loaded image</returns>
         public System.Drawing.Image GetImage() { return _image; }
 
+        public System.Drawing.Bitmap GetBitmap() { return _image; }
+
+
         /// <summary>
         /// Get a list of all found DS cameras
         /// </summary>
         /// <returns>string list with camera names</returns>
         public List<string> GetCameraNamesList() { return CameraNamesList; }
+
+        /// <summary>
+        /// Flag for extended debugger outputs
+        /// </summary>
+        public bool ExtDiag { get; set; } = false;
+
 
         private FilterInfoCollection videoDevices;
         private VideoCaptureDevice videoSource = null;
@@ -58,6 +153,11 @@ namespace WebcamAF
         private bool bDeviceExist = false;
         private readonly List<string> CameraNamesList = new List<string>();
         private string msg = "?";
+        private string info = "?";
+
+        #endregion
+
+        #region --- non interface device methods ---
 
         /// <summary>
         /// ctor
@@ -96,9 +196,10 @@ namespace WebcamAF
                     CameraNamesList.Add(device.Name);
                 }
             }
-            catch (ApplicationException)
+            catch (ApplicationException aex)
             {
                 bDeviceExist = false;
+                msg = aex.Message;
             }
             return bDeviceExist;
         }
@@ -124,18 +225,30 @@ namespace WebcamAF
             }
         }
 
-        public async Task WaitForOpen(int cameraIndex = 0)
+        #endregion
+
+        #region --- open and close video device ---
+
+        public async Task WaitForOpenAsync(int cameraIndex = 0)
         {
             Debug.WriteLine("DS_Camera.WaitForOpen({0})", cameraIndex);
             await Task.Run(() => Open(cameraIndex));
             Debug.WriteLine("IsRunning = " + IsRunning);
         }
 
-        public async void Open(int cameraIndex = 0)
+        /// <summary>
+        /// Open the camera (syncronous)
+        /// </summary>
+        /// <param name="cameraIndex">index of camera in video device list</param>
+        public bool Open(int cameraIndex = 0)
         {
             Debug.WriteLine("DS_Camera.Open()");
 
-            if (IsRunning) await CloseCameraAsync();
+            if (IsRunning)
+            {
+                //await CloseCameraAsync();
+                Task task = Task.Run(async () => await CloseCameraAsync().ConfigureAwait(true));
+            }
 
             if (bDeviceExist)
             {
@@ -229,8 +342,11 @@ namespace WebcamAF
                     }
                     #endregion
 
-                    Task<bool> task2 = OpenCameraAsync();
-                    bool b2 = await task2;
+                    //Task<bool> task2 = OpenCameraAsync();
+                    Task<bool> task = Task.Run<bool>(async () => await OpenCameraAsync());
+                    //bool b2 = await task2;
+
+                    var serviceResult = task.Result; // hier wird tatsächlich gewartet!!!
 
                     IsRunning = videoSource.IsRunning;
                     msg = IsRunning ? "Open camera ok" : msg = "Open camera fail!";
@@ -246,14 +362,15 @@ namespace WebcamAF
                 IsRunning = false;
             }
             SetMessage(msg);
+            return IsRunning;
         }
 
 
         /// <summary>
-        /// Open the video source
+        /// Open the video source async
         /// </summary>
         /// <param name="cameraIndex">camera index in names list</param>
-        /// <returns>true is success</returns>
+        /// <returns>true if camera is running</returns>
         private async Task<bool> OpenCameraAsync()
         {
             Debug.WriteLine($"DS_Camera.OpenCameraAsync(...)");
@@ -261,7 +378,8 @@ namespace WebcamAF
             {
                 videoSource.Start();
             });
-            return true; // videoSource.IsRunning;
+            //Debug.WriteLine($"DS_Camera IsRunning ={videoSource.IsRunning}");
+            return videoSource.IsRunning; // true
         }
 
         // experimental
@@ -293,10 +411,11 @@ namespace WebcamAF
         /// <summary>
         /// 
         /// </summary>
-        public async Task WaitForClose()
+        public async Task WaitForCloseAsync()
         {
             await CloseCameraAsync();
-            msg = "Camera closed"; SetMessage(msg);
+            msg = "Camera closed"; 
+            SetMessage(msg);
             IsRunning = false;
         }
 
@@ -334,16 +453,17 @@ namespace WebcamAF
             {
                 if (videoSource.IsRunning)
                 {
-                    Debug.WriteLine("CloseCameraAsync(): stopping video device ...");
+                    Debug.WriteLine("CloseCamera(): stopping video device ...");
                     videoSource.SignalToStop();
-                    Task.Delay(50).Wait();
+                    Task.Delay(500).Wait();
                     videoSource.WaitForStop();
                 }
-                Debug.WriteLine("CloseCameraAsync(): video device closed.");
+                Debug.WriteLine("CloseCamera(): video device closed.");
                 videoSource = null;
             }
         }
 
+        #endregion
 
         #region --- DS event handler ---
 
@@ -354,14 +474,14 @@ namespace WebcamAF
         /// <param name="eventArgs"></param>
         private void video_NewFrame(object sender, NewFrameEventArgs eventArgs)
         {
-            Trace.Write("*");
+            Trace.WriteIf(ExtDiag, "*");
             _image = (Bitmap)eventArgs.Frame.Clone();
-            if (ImageAvailableEvent != null)
-            {
-                ImageAvailableEvent(_image);
-            }
-            //aviWriter.AddFrame(_image);
-            _image.Dispose();
+            ImageAvailableEvent?.Invoke(_image);
+            
+            // wenn aktiv, funktionieren GetImage(), GetBitmap() nicht.
+            // Nebeneffekte???
+            //_image.Dispose();
+            //_image = null;
         }
 
         /// <summary>
@@ -391,5 +511,6 @@ namespace WebcamAF
 
         #endregion
 
+        #endregion
     }
 }

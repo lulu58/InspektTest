@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using Visutronik.Imaging;
 //using static Visutronik.Imaging.Checker;
 
@@ -22,7 +23,7 @@ namespace Visutronik.Inspektion
     {
         #region --- string arrays ---
 
-        public static string[] Operators  = new string[] { "Kamerabild", "Bild laden", "Filter", "Checker", "Math.Op" };
+        public static string[] Operations  = new string[] { "Kamerabild", "Bild laden", "Filter", "Checker", "Math.Op" };
 
         public static string[] FilterTypes = new string[] { "Smooth", "Binarization", "Edges", "Invert" };
 
@@ -36,6 +37,13 @@ namespace Visutronik.Inspektion
         public static string[] EvalTypes = new string[] {
             "Compare" };
 
+
+
+        public static string GetOperation(int idx)
+        {
+            string s = Operations.ElementAtOrDefault(idx);
+            return s;
+        }
 
         public static int GetAreaIndex(string area)
         {

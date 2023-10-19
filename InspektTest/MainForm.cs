@@ -11,7 +11,9 @@
 // 31.01.2023   1.0.0.8 chg DlgInstruction, add InstructionEnums.cs
 // 03.02.2023   1.0.0.9 viel geändert!!!
 // 16.10.2023   1.0.1.0 GIT-Version, chg mouse operations
-// 17.10.2023   1.0.1.0 viel geändert!!!
+// 17.10.2023   1.0.1.1 viel geändert!!!
+// 17.10.2023   1.0.1.2 add DS_Camera
+// 18.10.2023   1.0.1.3 GIT-Merge
 
 //TODO checker property dialog -> DlgInstruction, change checker size & position
 
@@ -43,7 +45,7 @@ namespace Visutronik.InspektTest
         const bool DEBUG_PICTBOX1 = true;
 
         const string PROG_NAME = "InspektTest";
-        const string PROG_VERSION = "1.0.1.1";
+        const string PROG_VERSION = "1.0.1.3";
         const string PROG_VENDOR = "Visutronik GmbH";
 
         // class instances
@@ -53,6 +55,8 @@ namespace Visutronik.InspektTest
 
         readonly FormState formState = new FormState();
         readonly Logger logger = new Logger();
+
+        readonly DS_Camera camera1 = new DS_Camera();
 
         System.Drawing.Bitmap imgSource;
         System.Drawing.Size imgSize = new System.Drawing.Size(0, 0);
@@ -81,7 +85,7 @@ namespace Visutronik.InspektTest
             {2, "Setup" }
         };
 
-        private Color[] checkercolor = { Color.Yellow, Color.Pink, Color.Green };
+        private Color[] checkercolor = { Color.Yellow, Color.Pink, Color.Green, Color.Red, Color.LightGreen, Color.LightBlue, Color.CornflowerBlue };
 
         // Verzeichnisse
         const string STR_PROJECTPATH = @"D:\temp\JuS";
@@ -119,6 +123,7 @@ namespace Visutronik.InspektTest
         private void OperationReady(InstructionParams instruction, bool result)
         {
             Debug.WriteLine("OperationReady: " + result);
+            
         }
 
         /// <summary>
@@ -162,7 +167,6 @@ namespace Visutronik.InspektTest
                 }
             }
 
-
             pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBox2.SizeMode = PictureBoxSizeMode.Zoom;
 
@@ -173,6 +177,21 @@ namespace Visutronik.InspektTest
             cbxMode.SelectedIndex = 0;
 
             if (settings.Fullscreen) SetFullscreen(true);
+
+            camera1.MessageAvailableEvent += DiagBox;
+            camera1.StartCamera(); //.Open(0);
+
+            //model.AddCamera(camera1);
+            
+            if (camera1.IsRunning)
+            {
+                model.AddCamera(camera1);
+                this.tabPage1.Text = "Kamera links";
+            }
+            else
+            {
+                DiagBox("Keine Kamera erkannt");
+            }
         }
 
         /// <summary>
@@ -182,9 +201,13 @@ namespace Visutronik.InspektTest
         /// <param name="e"></param>
         private void OnFormClosing(object sender, FormClosingEventArgs e)
         {
+            camera1.StopCamera();
+
             if (!settings.SaveSettings())
             {
-                MessageBox.Show("Fehler beim Speichern der Programmeinstellungen!");
+                string msg = "Fehler beim Speichern der Programmeinstellungen!";
+                logger.Log(msg);
+                MessageBox.Show(msg);
             }
         }
 
@@ -201,14 +224,21 @@ namespace Visutronik.InspektTest
         // callback method
         private void OnModelImageLoaded(Bitmap img)
         {
-            ovl.SetOverlay(img);
-            ovl2.SetOverlay(img);
-            this.imgSource = img;
-            this.imgSize = img.Size;    // wichtig für PictureBox1 <---> imgSource
-            this.imgLoaded = true;
-            ComputeZoomAndZeroPoint(pictureBox1.ClientSize, imgSource.Size);
+            if (img != null)
+            {
+                ovl.SetOverlay(img, "1");
+                ovl2.SetOverlay(img, "2");
+                this.imgSource = img;
+                this.imgSize = img.Size;    // wichtig für PictureBox1 <---> imgSource
+                this.imgLoaded = true;
+                ComputeZoomAndZeroPoint(pictureBox1.ClientSize, imgSource.Size);
 
-            Debug.WriteLine("Model_ImageLoaded");
+                Debug.WriteLine("Model_ImageLoaded");
+            }
+            else
+            {
+                DiagBox("OnModelImageLoaded Fehler!!!");
+            }
             //ShowImage();
         }
 
@@ -223,8 +253,6 @@ namespace Visutronik.InspektTest
         /// <param name="e"></param>
         private void OnMenuBildLaden_Click(object sender, EventArgs e)
         {
-            // @"d:\Temp\JUS\Kamerabilder\3a.bmp"
-            // @"d:\Temp\JUS\Kamerabilder\Lage_3+4\3a.bmp"
             LoadImage();
         }
 
@@ -329,12 +357,12 @@ namespace Visutronik.InspektTest
             {
                 DiagBox("neue Test-Anweisungsliste");
                 model.CreateTestInstructions();
-
-                foreach (var o in model)
-                {
-                    Debug.WriteLine(o.ToString()); // "Visutronik.Inspektion.Instruction"
-                    Debug.WriteLine(o.OperationParams);
-                }
+            }
+ 
+            foreach (var instruction in model)
+            {
+                //Debug.WriteLine(instruction.ToString()); // "Visutronik.Inspektion.Instruction"
+                Debug.WriteLine($"{instruction.Number} {instruction.OperationIdx} {instruction.OperationParams}");
             }
         }
 
@@ -664,6 +692,9 @@ namespace Visutronik.InspektTest
         #region ===== Helper methods ====================================================================
 
 
+        /// <summary>
+        /// Lade Bild aus Datei in Bildpuffer 0
+        /// </summary>
         private void LoadImage()
         {
             string imgpath = settings.LastImage;
@@ -682,20 +713,21 @@ namespace Visutronik.InspektTest
             {
                 imgpath = ofd.FileName;
 
-                if (model.LoadImageFromFile(imgpath))
+                if (model.LoadImageFromFile(imgpath, "0"))
                 {
                     settings.LastImage = imgpath;
+                    DiagBox($"Bild: {imgpath}");
                     // srcImage und Overlays werden in callback Model_ImageLoaded() erzeugt!
                     ShowImage();    // after load image
                 }
                 else
                 {
-                    DiagBox("Fehler: kein Bild geladen!");
+                    DiagBox("Fehler: " + model.LastError);
                 }
             }
         }
 
-
+        [Obsolete]
         private bool LoadSourceImage(string path)
         {
             try
@@ -735,11 +767,11 @@ namespace Visutronik.InspektTest
 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
-                model.InstructionFile = ofd.FileName;
-                if (model.LoadInstructionsFromFile())
+                //model.InstructionFile = ofd.FileName;
+                if (model.LoadInstructionsFromFile(ofd.FileName))
                 {
-                    DiagBox("Anweisungen geladen:");
-                    DiagBox(model.InstructionFile);
+                    DiagBox($"Anweisungen geladen: {model.InstructionFile}");
+                    //DiagBox(model.InstructionFile);
 
                     settings.LastInstruction = model.InstructionFile;
 
@@ -748,15 +780,14 @@ namespace Visutronik.InspektTest
                         ovl.ClearOverlay();
                         ovl2.ClearOverlay();
 
-                        model.DrawCheckersToOverlay();  // Checkers in Overlay anzeigen:
-                        ShowImage();          // Bild mit Overlay anzeigen (load instructions)
+                        //model.DrawCheckersToOverlay();  // Checkers in Overlay anzeigen:
+                        ShowImage();                    // Bild mit Overlay anzeigen (load instructions)
                     }
-                    else DiagBox("Warnung: noch kein Kamerabild!");
+                    else DiagBox("Warnung: noch kein Bild!");
                 }
                 else
                 {
-                    DiagBox("Fehler beim Laden der Liste:");
-                    DiagBox(model.LastError);
+                    DiagBox("Fehler:" + model.LastError);
                 }
             }
         }
@@ -807,34 +838,34 @@ namespace Visutronik.InspektTest
 
             DiagBox("Do the test...");
             bool result;
-            DiagBox("1. Bild laden");
-            DiagBox($"    {settings.LastImage}");
-            result = model.LoadImageFromFile(settings.LastImage);
-            if (!result) { DiagBox("Fehler!"); return; }
+            //DiagBox("Test: Bild laden");
+            //DiagBox($"    {settings.LastImage}");
+            //result = model.LoadImageFromFile(settings.LastImage);
+            //if (!result) { DiagBox("Fehler!"); return; }
 
-            DiagBox("2. Anweisungsliste laden");
+            DiagBox("Test: Anweisungsliste laden");
             DiagBox($"    {settings.LastInstruction}");
             //model.CreateTestInstructions();
             result = model.LoadInstructionsFromFile(settings.LastInstruction);
             if (!result) { DiagBox("Fehler!"); return; }
 
-            // test some drawing to overlay bitmap:
-            if (ovl != null)
-            {
-                Color drawColor = Color.Blue;
-                //ovl.SetOverlay(imgSource);
+            //// test some drawing to overlay bitmap:
+            //if (ovl != null)
+            //{
+            //    Color drawColor = Color.Blue;
+            //    //ovl.SetOverlay(imgSource);
 
-                //ovl.DrawRectangle(new Rectangle(20, 20, 200, 130), drawColor);       // internal drawing methods
-                //ovl.DrawArrow(new Point(100, 400), new Point(600, 400), drawColor, false, true);
-                //ovl.DrawStringCentric("Do the test", new Point(imgSource.Width / 2, 30), drawColor, 
-                //    new Font(FontFamily.GenericSansSerif, 36.0f));
-            }
+            //    //ovl.DrawRectangle(new Rectangle(20, 20, 200, 130), drawColor);       // internal drawing methods
+            //    //ovl.DrawArrow(new Point(100, 400), new Point(600, 400), drawColor, false, true);
+            //    //ovl.DrawStringCentric("Do the test", new Point(imgSource.Width / 2, 30), drawColor, 
+            //    //    new Font(FontFamily.GenericSansSerif, 36.0f));
+            //}
 
-            DiagBox("3. Test ausführen");
+            DiagBox("Test: Inspektion ausführen");
             result = model.Inspect();
             if (!result) { DiagBox("Fehler!"); return; }
 
-            DiagBox("4. Testergebnis anzeigen");
+            DiagBox("Test: Ergebnis anzeigen");
 
             string strErgebnis = result ? "Test erfolgreich" : "Fehler: " + model.LastError;
             DiagBox(strErgebnis);
@@ -855,7 +886,7 @@ namespace Visutronik.InspektTest
             //}
 
 
-            if (ovl != null)
+            if ((ovl != null) && (imgSource != null))
             {
                 ovl.DrawStringCentric(
                     strErgebnis,
@@ -870,10 +901,12 @@ namespace Visutronik.InspektTest
         /// </summary>
         private void ShowInstructions()
         {
-            if (model.HasInstructionList())
+            if (model.HasInstructions())
             {
                 // TODO Dialog DlgInstructionList anzeigen
-                DiagBoxClear();
+                //DiagBoxClear();
+                DiagBox("--- Instruktionen ---");
+                DiagBox(model.InstructionFile);
                 foreach (var i in model)
                 {
                     string s = string.Format($"{i.Number} : {i.Name} - {i.Description}");
@@ -893,6 +926,7 @@ namespace Visutronik.InspektTest
         {
             DiagBoxClear();
             DiagBox("Noch keine Hilfe!");
+            //TODO Fenster / Browser mit Hilfetext öffnen
         }
 
         #endregion
@@ -1278,7 +1312,7 @@ namespace Visutronik.InspektTest
 
         #endregion GUI helper methods
 
-        #region ===== App helper methods ====================================================================
+        #region ===== common app methods ================================================================
 
 
         /// <summary>

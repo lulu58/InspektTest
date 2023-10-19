@@ -36,19 +36,30 @@
     <ApplicationIcon>Kamera.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AForge">
-      <HintPath>3rdparty\AForge225\AForge.dll</HintPath>
-    </Reference>
-    <Reference Include="AForge.Imaging, Version=2.2.6.0, Culture=neutral, PublicKeyToken=ba8ddea9676ca48b, processorArchitecture=MSIL">
+    <Reference Include="AForge, Version=2.2.5.0, Culture=neutral, PublicKeyToken=c1db6ff4eaa06aeb, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>3rdparty\AForge225\AForge.Imaging.dll</HintPath>
+      <HintPath>D:\dev\_LIBS\AForge_Net4.8_Release\AForge.dll</HintPath>
     </Reference>
-    <Reference Include="AForge.Imaging.Formats">
-      <HintPath>3rdparty\AForge225\AForge.Imaging.Formats.dll</HintPath>
+    <Reference Include="AForge.Controls">
+      <HintPath>D:\dev\_LIBS\AForge_Net4.8_Release\AForge.Controls.dll</HintPath>
     </Reference>
-    <Reference Include="AForge.Math, Version=2.2.6.0, Culture=neutral, PublicKeyToken=abba2e25397ee8c9, processorArchitecture=MSIL">
+    <Reference Include="AForge.Imaging, Version=2.2.5.0, Culture=neutral, PublicKeyToken=ba8ddea9676ca48b, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>3rdparty\AForge225\AForge.Math.dll</HintPath>
+      <HintPath>D:\dev\_LIBS\AForge_Net4.8_Release\AForge.Imaging.dll</HintPath>
+    </Reference>
+    <Reference Include="AForge.Imaging.Formats, Version=2.2.4.0, Culture=neutral, PublicKeyToken=8065ed5a639199a0, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>D:\dev\_LIBS\AForge_Net4.8_Release\AForge.Imaging.Formats.dll</HintPath>
+    </Reference>
+    <Reference Include="AForge.Math, Version=2.2.5.0, Culture=neutral, PublicKeyToken=abba2e25397ee8c9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>D:\dev\_LIBS\AForge_Net4.8_Release\AForge.Math.dll</HintPath>
+    </Reference>
+    <Reference Include="AForge.Video">
+      <HintPath>D:\dev\_LIBS\AForge_Net4.8_Release\AForge.Video.dll</HintPath>
+    </Reference>
+    <Reference Include="AForge.Video.DirectShow">
+      <HintPath>D:\dev\_LIBS\AForge_Net4.8_Release\AForge.Video.DirectShow.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -77,6 +88,8 @@
     <Compile Include="DlgInstruction.Designer.cs">
       <DependentUpon>DlgInstruction.cs</DependentUpon>
     </Compile>
+    <Compile Include="Imaging\ICamera.cs" />
+    <Compile Include="Imaging\DS_Camera.cs" />
     <Compile Include="Imaging\GeometricTools.cs" />
     <Compile Include="Commons\GuiTools.cs" />
     <Compile Include="Commons\Logger.cs" />

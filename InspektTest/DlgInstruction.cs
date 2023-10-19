@@ -57,11 +57,10 @@ namespace Visutronik
             _instruction = new InstructionParams();
             _rect = rect;
             _instruction.Number = number;
-            _instruction.Operation = "Checker";
-            _instruction.OperatorIdx = (int)OperatorType.Checker;
+            _instruction.OperationIdx = (int)OperationType.Checker;
             _instruction.FilterIdx = -1;
             _instruction.CheckerIdx = -1;
-            _instruction.CameraIndex = camidx;
+            _instruction.CameraIdx = camidx;
             _instruction.ImageAreaIndex = (int)ImageAreaType.Rect;
             _instruction.ImageAreaParams = rect.ToString();
 
@@ -89,7 +88,7 @@ namespace Visutronik
         {
             // None = -1, LoadImage, Filter, Checker,
 
-            cbxOperator.Items.AddRange(InstructionHelper.Operators);
+            cbxOperator.Items.AddRange(InstructionHelper.Operations);
             //new string[] { "Kamera", "Bild laden", "Filter", "Checker" });
             cbxFilterTyp.Items.AddRange(InstructionHelper.FilterTypes);
             cbxCheckerTyp.Items.AddRange(InstructionHelper.CheckerTypes);
@@ -106,11 +105,11 @@ namespace Visutronik
             tbxName.Text = _instruction.Name;
             tbxDescription.Text = _instruction.Description;
 
-            cbxOperator.SelectedIndex = _instruction.OperatorIdx;
+            cbxOperator.SelectedIndex = _instruction.OperationIdx;
             cbxFilterTyp.SelectedIndex = _instruction.FilterIdx;
             cbxCheckerTyp.SelectedIndex = _instruction.CheckerIdx;
 
-            cbxCamName.SelectedIndex = _instruction.CameraIndex;
+            cbxCamName.SelectedIndex = _instruction.CameraIdx;
             cbxImageRegion.SelectedIndex = _instruction.ImageAreaIndex;
 
             tbxImageParam1.Text = _instruction.ImageAreaParams;
@@ -151,15 +150,14 @@ namespace Visutronik
 
             if (result)
             {
-                _instruction.CameraIndex = cbxCamName.SelectedIndex - 1;
+                _instruction.CameraIdx = cbxCamName.SelectedIndex - 1;
                 _instruction.ImageAreaIndex = cbxImageRegion.SelectedIndex;
                 _instruction.ImageAreaParams = _rect.ToString();
                 _instruction.Name = tbxName.Text != string.Empty ? tbxName.Text : "unbenannt";
                 _instruction.Description = tbxDescription.Text;
 
                 // hier 
-                _instruction.Operation = "Checker";
-                _instruction.OperatorIdx = cbxOperator.SelectedIndex;
+                _instruction.OperationIdx = cbxOperator.SelectedIndex;
 
                 DialogResult = DialogResult.OK;
                 Close();

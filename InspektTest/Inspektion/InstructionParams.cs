@@ -1,17 +1,17 @@
 ﻿/*
  * Projekt  : Inspekt
  * Datei    : Inspektionsanweisung
+ * 
  * 25.10.2018 initial
- * 06.01.2023
- * 25.01.2023   add prop CameraIndex
  * 31.01.2023   chg props, add dictionaries
+ * 18.10.2023   chg default index = -1
  * 
  * Idee: Eine Bildverarbeitungsanweisung besteht aus folgenden Teile:
  * - Bild und Bildparameter
  * - auszuführende Operationen mit Parametern
  * - Bewertung der Operationsergebnisse
  * - Gesamtergebnis
- * Parameter werden als String-Properties übergeben und müssen durch Parser aufbereitet werden
+ * - alle Parameter werden als String-Properties übergeben und müssen durch Parser aufbereitet werden
  */
 
 using System;
@@ -37,26 +37,34 @@ namespace Visutronik.Inspektion
         public string Description { get; set; } = string.Empty;
         public bool IsSelected { get; set; } = false;
 
-        // area
-        public int CameraIndex { get; set; } = 0;
+        // --- operation area ---
+        
+        /// <summary>
+        /// Index of camera for image acquisition from camera
+        /// </summary>
+        public int CameraIdx { get; set; } = -1;
 
-        public int ImageIndex { get; set; } = 0;
+        /// <summary>
+        /// Index of used image buffer
+        /// </summary>
+        public int ImageIndex { get; set; } = -1;
 
-        // checker form
-        public int ImageAreaIndex { get; set; } = 0;    
+        // Index of image area (full image, checker form)
+        public int ImageAreaIndex { get; set; } = -1;    
 
         // checker size
         public string ImageAreaParams { get; set; } = string.Empty;
 
-        // operation
-        public string Operation { get; set; } = "None";
-        public int OperatorIdx { get; set; } = 0;
+        // --- image operation ---
+
+        //public string Operation { get; set; } = "None";
+        public int OperationIdx { get; set; } = -1;
         public string OperationParams { get; set; } = string.Empty;
-        public int FilterIdx { get; set; } = 0;
-        public int CheckerIdx { get; set; } = 0;
+        public int FilterIdx { get; set; } = -1;
+        public int CheckerIdx { get; set; } = -1;
 
         // evaluation / Auswertung
-        public string Evaluation { get; set; } = string.Empty;
+        public int EvaluationIdx { get; set; } = -1;
         public string EvaluationParams { get; set; } = string.Empty;
 
         // result
@@ -71,7 +79,7 @@ namespace Visutronik.Inspektion
 
         #region --- private vars ---
 
-        OperatorType opType = OperatorType.None;
+        //OperationType opType = OperationType.None;
 
         RectangleF rectHull = new RectangleF();
         CircleF circle = new CircleF();
@@ -91,15 +99,15 @@ namespace Visutronik.Inspektion
             Description = "No description available";
             IsSelected = false;
 
-            CameraIndex = 0;
-            ImageIndex = 0;
-            ImageAreaIndex = 0;
+            CameraIdx = -1;
+            ImageIndex = -1;
+            ImageAreaIndex = -1;
             ImageAreaParams = "";   // a x b, MP, r, P1, P2, ...
 
-            Operation = "";         // Load, Save, Filter, Checker, ...
+            OperationIdx = -1;         // Load, Save, Filter, Checker, ...
             OperationParams = "";
 
-            Evaluation = "";        // "Compare", "", ...
+            EvaluationIdx = -1;        // "Compare", "", ...
             EvaluationParams = "";
 
             ResultSuccess = false;
@@ -118,7 +126,7 @@ namespace Visutronik.Inspektion
         {
             Debug.WriteLine($"  SetImage({cam}, {idx}, {area}, {areaParams}");
 
-            CameraIndex = cam;
+            CameraIdx = cam;
             ImageIndex = idx;
             ImageAreaIndex = InstructionHelper.GetAreaIndex(area);
             ImageAreaParams = areaParams;
@@ -130,9 +138,9 @@ namespace Visutronik.Inspektion
         /// </summary>
         /// <param name="op">operation</param>
         /// <param name="opParams">operation parameters</param>
-        public bool SetOperation(string op, string opParams = "")
+        public bool SetOperation(int opidx, string opParams = "")
         {
-            Operation = op;
+            OperationIdx = opidx;
             OperationParams = opParams;
             return CheckOperationParameters();
         }
@@ -143,9 +151,9 @@ namespace Visutronik.Inspektion
         /// <param name="eval"></param>
         /// <param name="evalParams"></param>
         /// <returns></returns>
-        public bool SetEvaluation(string eval, string evalParams = "")
+        public bool SetEvaluation(int evalidx, string evalParams = "")
         {
-            Evaluation = eval;
+            EvaluationIdx = evalidx;
             EvaluationParams = evalParams;
             return CheckEvaluationParameters();
         }
@@ -158,7 +166,7 @@ namespace Visutronik.Inspektion
         /// <returns></returns>
         public bool PointIsInside(System.Drawing.Point pt)
         {
-            bool result = (OperatorIdx == (int)OperatorType.Checker);
+            bool result = (OperationIdx == (int)OperationType.Checker);
             //Debug.WriteLine("PointIsInside: " + ImageArea);
             if (result)
             {
@@ -190,6 +198,9 @@ namespace Visutronik.Inspektion
             if (!CheckImageAreaParameters()) result = false;
             if (!CheckOperationParameters()) result = false;
             if (!CheckEvaluationParameters()) result = false;
+
+            Debug.WriteLineIf(!result, "SetInternalParametersAfterLoading(): Instruction parameters fail: " + Name);
+
             return result;
         }
 
@@ -227,12 +238,11 @@ namespace Visutronik.Inspektion
                 // TODO CheckImageAreaParameters() - Line
                 line = InstructionHelper.GetLineFromString(ImageAreaParams);
             }
-
             return true;
         }
 
         /// <summary>
-        /// 
+        /// Gültigkeit der Eingaben prüfen
         /// </summary>
         /// <returns></returns>
         public bool CheckInstructionParameters()
@@ -240,6 +250,7 @@ namespace Visutronik.Inspektion
             Debug.WriteLineIf(DIAG_PARAMS, "Instruction.CheckInstructionParameters(): ");
             bool result = true;
             result &= this.Name.Length > 1;
+            // TODO add more InstructionParameter checks
             return result;
         }
 
@@ -250,47 +261,50 @@ namespace Visutronik.Inspektion
         public bool CheckOperationParameters()
         {
             Debug.WriteLineIf(DIAG_PARAMS, "Instruction.CheckOperationParameters(): ");
-            opType = OperatorType.None;
-            if (Operation != string.Empty)
-            {
-                Debug.WriteLine(" Operation = " + Operation);
-                switch (Operation)
-                {
-                    case "":
-                        opType = OperatorType.SnapImage; break;
-                    case "ImageLoad":
-                        opType = OperatorType.LoadImage; break;
-                    case "ImageFilter":
-                        opType = OperatorType.Filter; break;
-                    case "Checker":
-                        opType = OperatorType.Checker; break;
-                    case "MathOp":
-                        opType = OperatorType.MathOp; break;
-                    //TODO add weitere OperatorType ...
-                    default:
-                        throw new Exception("unknown operation");
-                }
-                OperatorIdx = (int) opType;
-            }
+            //opType = OperationType.None;
+            if (OperationIdx < 0) return false;
+            //|| (OperationIdx >)
+                    { }
+            //{
+            //    int idx = OperationIdx;
+            //    Debug.WriteLine(" Operation = " + InstructionHelper.GetOperation(idx));
+            //    switch (OperationIdx)
+            //    {
+            //        case "":
+            //            opType = OperationType.SnapImage; break;
+            //        case "ImageLoad":
+            //            opType = OperationType.LoadImage; break;
+            //        case "ImageFilter":
+            //            opType = OperationType.Filter; break;
+            //        case "Checker":
+            //            opType = OperationType.Checker; break;
+            //        case "MathOp":
+            //            opType = OperationType.MathOp; break;
+            //        //TODO add weitere OperatorType ...
+            //        default:
+            //            throw new Exception("unknown operation");
+            //    }
+            //    OperationIdx = (int) opType;
+            //}
 
-            if (OperationParams != string.Empty)
-            {
-                Debug.WriteLineIf(DIAG_PARAMS, " OperationParams = " + OperationParams);
-                switch (opType)
-                {
-                    case OperatorType.SnapImage:
-                        break;
-                    case OperatorType.LoadImage:
-                        break;
-                    case OperatorType.Filter:
-                        break;
-                    case OperatorType.Checker:
-                        break;
-                    case OperatorType.MathOp:
-                        break;
+            //if (OperationParams != string.Empty)
+            //{
+            //    Debug.WriteLineIf(DIAG_PARAMS, " OperationParams = " + OperationParams);
+            //    switch (opType)
+            //    {
+            //        case OperationType.SnapImage:
+            //            break;
+            //        case OperationType.LoadImage:
+            //            break;
+            //        case OperationType.Filter:
+            //            break;
+            //        case OperationType.Checker:
+            //            break;
+            //        case OperationType.MathOp:
+            //            break;
 
-                }
-            }
+            //    }
+            //}
 
             return true;
         }
