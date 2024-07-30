@@ -14,7 +14,8 @@
 // 17.10.2023   1.0.1.1 viel geändert!!!
 // 17.10.2023   1.0.1.2 add DS_Camera
 // 18.10.2023   1.0.1.3 GIT-Merge
-
+// 30.07.2024   1.0.1.4 mit GIT rumspielen
+//
 //TODO checker property dialog -> DlgInstruction, change checker size & position
 
 using System;
@@ -45,7 +46,7 @@ namespace Visutronik.InspektTest
         const bool DEBUG_PICTBOX1 = true;
 
         const string PROG_NAME = "InspektTest";
-        const string PROG_VERSION = "1.0.1.3";
+        const string PROG_VERSION = "1.0.1.4";
         const string PROG_VENDOR = "Visutronik GmbH";
 
         // class instances
@@ -303,6 +304,16 @@ namespace Visutronik.InspektTest
         private void OnListeAnzeigen_Click(object sender, EventArgs e)
         {
             ShowInstructions();
+        }
+
+        /// <summary>
+        /// Instruktion-Liste bearbeiten
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnListeEditieren_Click(object sender, EventArgs e)
+        {
+            EditInstructions();
         }
 
         /// <summary>
@@ -906,10 +917,10 @@ namespace Visutronik.InspektTest
                 // TODO Dialog DlgInstructionList anzeigen
                 //DiagBoxClear();
                 DiagBox("--- Instruktionen ---");
-                DiagBox(model.InstructionFile);
+                DiagBox($"Datei: {model.InstructionFile}");
                 foreach (var i in model)
                 {
-                    string s = string.Format($"{i.Number} : {i.Name} - {i.Description}");
+                    string s = $"{i.Number} : {i.Name} - {i.Description}";
                     DiagBox(s);
                 }
             }
@@ -918,6 +929,24 @@ namespace Visutronik.InspektTest
                 DiagBox("Keine Instruktionsliste!");
             }
         }
+
+        /// <summary>
+        /// Editieren und Neuladen der Instruktionsliste
+        /// </summary>
+        private void EditInstructions()
+        {
+            if (model.HasInstructions())
+            {
+                // TODO Editieren und Neuladen der Instruktionsliste
+                //MsgBox
+                DiagBox("TODO: Editieren und Neuladen der Instruktionsliste");
+            }
+            else
+            {
+                DiagBox("Keine Instruktionsliste!");
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -1359,5 +1388,6 @@ namespace Visutronik.InspektTest
 
         #endregion
 
+ 
     }
 }

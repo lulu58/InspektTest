@@ -61,6 +61,7 @@
             this.btnNew = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
             this.btnLoad = new System.Windows.Forms.Button();
+            this.editierenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -178,7 +179,8 @@
             // instruktionenToolStripMenuItem
             // 
             this.instruktionenToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.listeAnzeigenToolStripMenuItem});
+            this.listeAnzeigenToolStripMenuItem,
+            this.editierenToolStripMenuItem});
             this.instruktionenToolStripMenuItem.Name = "instruktionenToolStripMenuItem";
             this.instruktionenToolStripMenuItem.Size = new System.Drawing.Size(89, 23);
             this.instruktionenToolStripMenuItem.Text = "&Instruktionen";
@@ -186,7 +188,7 @@
             // listeAnzeigenToolStripMenuItem
             // 
             this.listeAnzeigenToolStripMenuItem.Name = "listeAnzeigenToolStripMenuItem";
-            this.listeAnzeigenToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.listeAnzeigenToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.listeAnzeigenToolStripMenuItem.Text = "&Liste anzeigen";
             this.listeAnzeigenToolStripMenuItem.Click += new System.EventHandler(this.OnListeAnzeigen_Click);
             // 
@@ -282,7 +284,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(481, 336);
+            this.tabPage2.Size = new System.Drawing.Size(450, 336);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -292,7 +294,7 @@
             this.pictureBox2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pictureBox2.Location = new System.Drawing.Point(3, 3);
             this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(475, 330);
+            this.pictureBox2.Size = new System.Drawing.Size(444, 330);
             this.pictureBox2.TabIndex = 0;
             this.pictureBox2.TabStop = false;
             // 
@@ -379,6 +381,13 @@
             this.btnLoad.UseVisualStyleBackColor = true;
             this.btnLoad.Click += new System.EventHandler(this.BtnListeLaden_Click);
             // 
+            // editierenToolStripMenuItem
+            // 
+            this.editierenToolStripMenuItem.Name = "editierenToolStripMenuItem";
+            this.editierenToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.editierenToolStripMenuItem.Text = "&Editieren";
+            this.editierenToolStripMenuItem.Click += new System.EventHandler(this.OnListeEditieren_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -444,6 +453,7 @@
         private System.Windows.Forms.ToolStripMenuItem instruktionslisteSpeichernToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem5;
         private System.Windows.Forms.ToolStripMenuItem einstellungenToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem editierenToolStripMenuItem;
     }
 }
 
